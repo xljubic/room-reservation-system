@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+           http://www.liquibase.org/xml/ns/dbchangelog
+           http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <!-- USERS -->
+    <changeSet id="001-create-users" author="sale">
+        <createTable tableName="users">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="first_name" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="last_name" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="email" type="VARCHAR(120)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="role" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- ROOMS -->
+    <changeSet id="002-create-rooms" author="sale">
+        <createTable tableName="rooms">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="code" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="capacity" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="building" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="floor_level" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="room_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="number_of_computers" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- RESERVATIONS -->
+    <changeSet id="003-create-reservations" author="sale">
+        <createTable tableName="reservations">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="room_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="start_date_time" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="end_date_time" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="purpose" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="description" type="VARCHAR(500)"/>
+
+            <column name="status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                constraintName="fk_reservation_room"
+                baseTableName="reservations"
+                baseColumnNames="room_id"
+                referencedTableName="rooms"
+                referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint
+                constraintName="fk_reservation_user"
+                baseTableName="reservations"
+                baseColumnNames="created_by_id"
+                referencedTableName="users"
+                referencedColumnNames="id"/>
+
+        <createIndex tableName="reservations" indexName="idx_res_room">
+            <column name="room_id"/>
+        </createIndex>
+
+        <createIndex tableName="reservations" indexName="idx_res_start_end">
+            <column name="start_date_time"/>
+            <column name="end_date_time"/>
+        </createIndex>
+
+        <createIndex tableName="reservations" indexName="idx_res_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- RESERVATION APPROVALS (history) -->
+    <changeSet id="004-create-reservation-approvals" author="sale">
+        <createTable tableName="reservation_approvals">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="reservation_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="decided_by_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="decision" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="comment" type="VARCHAR(500)"/>
+
+            <column name="decided_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                constraintName="fk_approval_reservation"
+                baseTableName="reservation_approvals"
+                baseColumnNames="reservation_id"
+                referencedTableName="reservations"
+                referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint
+                constraintName="fk_approval_user"
+                baseTableName="reservation_approvals"
+                baseColumnNames="decided_by_id"
+                referencedTableName="users"
+                referencedColumnNames="id"/>
+
+        <createIndex tableName="reservation_approvals" indexName="idx_appr_reservation">
+            <column name="reservation_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

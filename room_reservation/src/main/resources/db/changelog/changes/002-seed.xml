@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+           http://www.liquibase.org/xml/ns/dbchangelog
+           http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <!-- USERS -->
+    <changeSet id="005-seed-users" author="sale">
+        <insert tableName="users">
+            <column name="first_name" value="Admin"/>
+            <column name="last_name" value="User"/>
+            <column name="email" value="admin@fon.rs"/>
+            <column name="role" value="ADMIN"/>
+        </insert>
+
+        <insert tableName="users">
+            <column name="first_name" value="Marko"/>
+            <column name="last_name" value="Markovic"/>
+            <column name="email" value="marko@fon.rs"/>
+            <column name="role" value="USER"/>
+        </insert>
+
+        <insert tableName="users">
+            <column name="first_name" value="Jelena"/>
+            <column name="last_name" value="Jovanovic"/>
+            <column name="email" value="jelena@fon.rs"/>
+            <column name="role" value="USER"/>
+        </insert>
+    </changeSet>
+
+    <!-- ROOMS -->
+    <changeSet id="006-seed-rooms" author="sale">
+        <insert tableName="rooms">
+            <column name="code" value="A1"/>
+            <column name="capacity" valueNumeric="120"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="0"/>
+            <column name="room_type" value="AMFITEATAR"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+
+        <insert tableName="rooms">
+            <column name="code" value="R201"/>
+            <column name="capacity" valueNumeric="30"/>
+            <column name="building" value="NOVA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="2"/>
+            <column name="room_type" value="RACUNARSKA_SALA"/>
+            <column name="number_of_computers" valueNumeric="30"/>
+        </insert>
+
+        <insert tableName="rooms">
+            <column name="code" value="U105"/>
+            <column name="capacity" valueNumeric="40"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="1"/>
+            <column name="room_type" value="UCIONICA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
