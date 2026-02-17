@@ -62,7 +62,7 @@ function TimeSelect({ value, onChange, hours, minutes = MINUTES }) {
   const safeM = minutes.includes(m) ? m : minutes[0];
 
   // ako smo morali da ispravimo, javi parent-u
-  React.useEffect(() => {
+  useEffect(() => {
     const fixed = buildHHMM(safeH, safeM);
     if (fixed !== value) onChange(fixed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -633,8 +633,9 @@ export default function App() {
                 </select>
               </label>
 
-              //DODATOOO
+              
               <label>
+                
                 Od:&nbsp;
                 <TimeSelect
                   value={startHHMM}
@@ -651,7 +652,7 @@ export default function App() {
                   hours={HOURS_TO}
                 />
               </label>
-              //DODATOOO-
+              
 
               <label>
                 Svrha:&nbsp;
