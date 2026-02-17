@@ -28,12 +28,92 @@ function isAdmin(user) {
 
 const DAY_START = "08:00";
 const DAY_END = "20:00";
-const SLOT_MINUTES = 30;
+const SLOT_MINUTES = 15;
 
-// za input type=time: max start mora biti 19:30 (da kraj bude 20:00)
-const MAX_START = "19:30";
-const MIN_END = "08:30";
+// za input type=time: max start mora biti 19:45 (da kraj bude 20:00)
+const MAX_START = "19:45";
+const MIN_END = "08:15";
 const MAX_END = "20:00";
+
+
+//DODATOOO
+
+// opcioni: dropdown sa 15-minutnim intervalima (umesto free text input)
+const MINUTES = [0, 15, 30, 45];
+const HOURS_FROM = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+const HOURS_TO   = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+
+const pad2 = (n) => String(n).padStart(2, "0");
+
+function parseHHMM(hhmm) {
+  const [h, m] = hhmm.split(":").map(Number);
+  return { h, m };
+}
+function buildHHMM(h, m) {
+  return `${pad2(h)}:${pad2(m)}`;
+}
+
+// opcioni component za odabir vremena sa dropdownima (umesto free text input type=time)
+function TimeSelect({ value, onChange, hours, minutes = MINUTES }) {
+  const { h, m } = parseHHMM(value);
+
+  // ako je value nekako van liste, “snapuj” na prvi dozvoljeni
+  const safeH = hours.includes(h) ? h : hours[0];
+  const safeM = minutes.includes(m) ? m : minutes[0];
+
+  // ako smo morali da ispravimo, javi parent-u
+  React.useEffect(() => {
+    const fixed = buildHHMM(safeH, safeM);
+    if (fixed !== value) onChange(fixed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+      <select
+        value={safeH}
+        onChange={(e) => onChange(buildHHMM(Number(e.target.value), safeM))}
+      >
+        {hours.map((hh) => (
+          <option key={hh} value={hh}>
+            {pad2(hh)}
+          </option>
+        ))}
+      </select>
+
+      <span>:</span>
+
+      <select
+        value={safeM}
+        onChange={(e) => onChange(buildHHMM(safeH, Number(e.target.value)))}
+      >
+        {minutes.map((mm) => (
+          <option key={mm} value={mm}>
+            {pad2(mm)}
+          </option>
+        ))}
+      </select>
+    </span>
+  );
+}
+
+function clampToAllowedStart(hhmm) {
+  // OD: 08:00–19:45
+  if (hhmm < "08:00") return "08:00";
+  if (hhmm > "19:45") return "19:45";
+  return hhmm;
+}
+function clampToAllowedEnd(hhmm) {
+  // DO: 08:00–20:00 (ti želiš da 20 postoji)
+  if (hhmm < "08:00") return "08:00";
+  if (hhmm > "20:00") return "20:00";
+  return hhmm;
+}
+
+//DODATOOO-
+
+
+
 
 export default function App() {
   // logged user (persist)
@@ -54,7 +134,7 @@ export default function App() {
 
   // create form
   const [selectedRoomId, setSelectedRoomId] = useState(null);
-  const [startHHMM, setStartHHMM] = useState("10:00");
+  const [startHHMM, setStartHHMM] = useState("10:15");
   const [endHHMM, setEndHHMM] = useState("10:30");
   const [purpose, setPurpose] = useState("VEZBE");
   const [name, setName] = useState("Termin");
@@ -145,7 +225,8 @@ export default function App() {
   const timeSlots = useMemo(() => {
     const dayStart = schedule?.dayStart ?? DAY_START;
     const dayEnd = schedule?.dayEnd ?? DAY_END;
-    const step = schedule?.slotMinutes ?? SLOT_MINUTES;
+    const step = SLOT_MINUTES;
+
 
     const start = parseTimeToMinutes(dayStart);
     const end = parseTimeToMinutes(dayEnd);
@@ -157,7 +238,7 @@ export default function App() {
 
   function slotBlocked(roomId, slotStartMin) {
     if (!schedule) return false;
-    const step = schedule.slotMinutes ?? SLOT_MINUTES;
+    const step = SLOT_MINUTES;
     const slotEndMin = slotStartMin + step;
 
     for (const r of schedule.approvedReservations) {
@@ -184,7 +265,7 @@ export default function App() {
 
   function onCellClick(roomId, slotStartMin) {
     if (!schedule) return;
-    const step = schedule.slotMinutes ?? SLOT_MINUTES;
+    const step = SLOT_MINUTES;
 
     const start = minutesToHHMM(slotStartMin);
     const end = minutesToHHMM(slotStartMin + step);
@@ -193,8 +274,10 @@ export default function App() {
     if (slotBlocked(roomId, slotStartMin)) return;
 
     setSelectedRoomId(roomId);
-    setStartHHMM(start);
-    setEndHHMM(end);
+    //DODATOOOO
+    setStartHHMM(clampToAllowedStart(start));
+    setEndHHMM(clampToAllowedEnd(end));
+    //DODATOOOO-
   }
 
   async function createReservation() {
@@ -203,6 +286,10 @@ export default function App() {
 
     if (!withinWorkingHours(startHHMM, endHHMM)) {
       return alert("Radno vreme je 08:00–20:00. Proveri OD/DO.");
+    }
+    if (endHHMM <= startHHMM) {
+      alert("Vreme 'Do' mora biti posle vremena 'Od'.");
+      return;
     }
 
     const start = `${date}T${startHHMM}:00`;
@@ -267,21 +354,10 @@ export default function App() {
   }
 
   // MVP login (seed) - UI je email/password kao pravi login
-  function loginMvp() {
-    const email = loginEmail.trim().toLowerCase();
-    const pass = loginPassword;
-
-    const found = users.find((u) => u.email.toLowerCase() === email);
-    if (!found) return alert("Ne postoji korisnik sa tim emailom (MVP seed).");
-
-    // MVP provera šifre (dok ne prebacimo na backend)
-    if (found.password !== pass) return alert("Pogrešna šifra (MVP seed).");
-
-    const logged = { id: found.id, email: found.email, role: found.role, firstName: found.firstName, lastName: found.lastName };
-    setUser(logged);
-    localStorage.setItem("rr_user", JSON.stringify(logged));
-    localStorage.setItem("rr_last_email", email);
-    setLoginPassword("");
+  async function loginMvp() {
+    const res = await axios.post("/api/auth/login", { email, password });
+    setUser(res.data);
+    localStorage.setItem("rr_user", JSON.stringify(res.data));
   }
 
   function logout() {
@@ -504,7 +580,7 @@ export default function App() {
 
                     {timeSlots.map((t) => {
                       const blocked = slotBlocked(room.id, t);
-                      const step = schedule.slotMinutes ?? SLOT_MINUTES;
+                      const step = SLOT_MINUTES;
                       const selected =
                         selectedRoomId === room.id &&
                         startHHMM === minutesToHHMM(t) &&
@@ -557,29 +633,25 @@ export default function App() {
                 </select>
               </label>
 
+              //DODATOOO
               <label>
                 Od:&nbsp;
-                <input
-                  type="time"
+                <TimeSelect
                   value={startHHMM}
-                  min={DAY_START}
-                  max={MAX_START}
-                  step={SLOT_MINUTES * 60}
-                  onChange={(e) => setStartHHMM(e.target.value)}
+                  onChange={setStartHHMM}
+                  hours={HOURS_FROM}
                 />
               </label>
 
               <label>
                 Do:&nbsp;
-                <input
-                  type="time"
+                <TimeSelect
                   value={endHHMM}
-                  min={MIN_END}
-                  max={MAX_END}
-                  step={SLOT_MINUTES * 60}
-                  onChange={(e) => setEndHHMM(e.target.value)}
+                  onChange={setEndHHMM}
+                  hours={HOURS_TO}
                 />
               </label>
+              //DODATOOO-
 
               <label>
                 Svrha:&nbsp;
