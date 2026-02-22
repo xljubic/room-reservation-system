@@ -356,20 +356,22 @@ export default function App() {
   // MVP login (seed) - UI je email/password kao pravi login
 async function loginMvp() {
   try {
-    const email = loginEmail.trim();
+    const email = loginEmail?.trim();
     const password = loginPassword;
 
-    const res = await axios.post("/api/auth/login", { email, password });
-    setUser(res.data);
+    if (!email || !password) {
+      alert("Unesi email i šifru.");
+      return;
+    }
 
+    const res = await axios.post("/api/auth/login", { email, password });
+
+    setUser(res.data);
     localStorage.setItem("rr_user", JSON.stringify(res.data));
     localStorage.setItem("rr_last_email", email);
+    setLoginPassword("");
   } catch (e) {
-    const msg =
-      e?.response?.data?.message ||
-      e?.response?.data ||
-      e?.message ||
-      "Login greška";
+    const msg = e?.response?.data ?? "Greška pri login-u";
     alert(typeof msg === "string" ? msg : JSON.stringify(msg));
   }
 }

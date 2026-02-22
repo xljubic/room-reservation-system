@@ -64,4 +64,16 @@ public class AuthController {
 
         return ResponseEntity.ok(resp);
     }
+//ovo je bilo pomocno moze da se obrise
+    @PostMapping("/debug/set-password")
+    public String setPassword(@RequestParam String email, @RequestParam String password) {
+        var uOpt = userRepository.findByEmail(email);
+        if (uOpt.isEmpty()) {
+            return "NO USER";
+        }
+        var u = uOpt.get();
+        u.setPasswordHash(encoder.encode(password));
+        userRepository.save(u);
+        return "OK";
+    }
 }
