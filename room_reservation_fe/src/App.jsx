@@ -354,11 +354,26 @@ export default function App() {
   }
 
   // MVP login (seed) - UI je email/password kao pravi login
-  async function loginMvp() {
+async function loginMvp() {
+  try {
+    const email = loginEmail.trim();
+    const password = loginPassword;
+
     const res = await axios.post("/api/auth/login", { email, password });
     setUser(res.data);
+
     localStorage.setItem("rr_user", JSON.stringify(res.data));
+    localStorage.setItem("rr_last_email", email);
+  } catch (e) {
+    const msg =
+      e?.response?.data?.message ||
+      e?.response?.data ||
+      e?.message ||
+      "Login greška";
+    alert(typeof msg === "string" ? msg : JSON.stringify(msg));
   }
+}
+
 
   function logout() {
     localStorage.removeItem("rr_user");
