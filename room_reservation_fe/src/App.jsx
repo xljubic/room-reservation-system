@@ -35,13 +35,12 @@ const MAX_START = "19:45";
 const MIN_END = "08:15";
 const MAX_END = "20:00";
 
-
 //DODATOOO
 
 // opcioni: dropdown sa 15-minutnim intervalima (umesto free text input)
 const MINUTES = [0, 15, 30, 45];
 const HOURS_FROM = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
-const HOURS_TO   = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+const HOURS_TO = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
 const pad2 = (n) => String(n).padStart(2, "0");
 
@@ -57,11 +56,9 @@ function buildHHMM(h, m) {
 function TimeSelect({ value, onChange, hours, minutes = MINUTES }) {
   const { h, m } = parseHHMM(value);
 
-  // ako je value nekako van liste, “snapuj” na prvi dozvoljeni
   const safeH = hours.includes(h) ? h : hours[0];
   const safeM = minutes.includes(m) ? m : minutes[0];
 
-  // ako smo morali da ispravimo, javi parent-u
   useEffect(() => {
     const fixed = buildHHMM(safeH, safeM);
     if (fixed !== value) onChange(fixed);
@@ -69,7 +66,7 @@ function TimeSelect({ value, onChange, hours, minutes = MINUTES }) {
   }, []);
 
   return (
-    <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
       <select
         value={safeH}
         onChange={(e) => onChange(buildHHMM(Number(e.target.value), safeM))}
@@ -93,7 +90,7 @@ function TimeSelect({ value, onChange, hours, minutes = MINUTES }) {
           </option>
         ))}
       </select>
-    </span>
+    </div>
   );
 }
 
@@ -112,9 +109,6 @@ function clampToAllowedEnd(hhmm) {
 
 //DODATOOO-
 
-
-
-
 export default function App() {
   // logged user (persist)
   const [user, setUser] = useState(() => {
@@ -124,7 +118,9 @@ export default function App() {
 
   // Login UI (email/password) - MVP seed auth
   const [users, setUsers] = useState([]);
-  const [loginEmail, setLoginEmail] = useState(() => localStorage.getItem("rr_last_email") || "");
+  const [loginEmail, setLoginEmail] = useState(
+    () => localStorage.getItem("rr_last_email") || ""
+  );
   const [loginPassword, setLoginPassword] = useState("");
 
   // schedule
@@ -149,15 +145,33 @@ export default function App() {
   const [pendingLoading, setPendingLoading] = useState(false);
   const [adminComment, setAdminComment] = useState("");
 
-  // admin tabs
-  const [adminTab, setAdminTab] = useState("PENDING"); // "PENDING" | "MY"
-
   async function loadUsers() {
     // MVP: seed korisnici (dok ne uvedemo pravi /api/auth/login)
     setUsers([
-      { id: 1, email: "admin@fon.rs", role: "ADMIN", firstName: "Admin", lastName: "User", password: "admin" },
-      { id: 2, email: "marko@fon.rs", role: "USER", firstName: "Marko", lastName: "Markovic", password: "user" },
-      { id: 3, email: "jelena@fon.rs", role: "USER", firstName: "Jelena", lastName: "Jovanovic", password: "user" },
+      {
+        id: 1,
+        email: "admin@fon.rs",
+        role: "ADMIN",
+        firstName: "Admin",
+        lastName: "User",
+        password: "admin",
+      },
+      {
+        id: 2,
+        email: "marko@fon.rs",
+        role: "USER",
+        firstName: "Marko",
+        lastName: "Markovic",
+        password: "user",
+      },
+      {
+        id: 3,
+        email: "jelena@fon.rs",
+        role: "USER",
+        firstName: "Jelena",
+        lastName: "Jovanovic",
+        password: "user",
+      },
     ]);
   }
 
@@ -227,7 +241,6 @@ export default function App() {
     const dayEnd = schedule?.dayEnd ?? DAY_END;
     const step = SLOT_MINUTES;
 
-
     const start = parseTimeToMinutes(dayStart);
     const end = parseTimeToMinutes(dayEnd);
 
@@ -236,29 +249,29 @@ export default function App() {
     return slots;
   }, [schedule]);
 
-function slotStatus(roomId, slotStartMin) {
-  if (!schedule) return null;
-  const step = SLOT_MINUTES;
-  const slotEndMin = slotStartMin + step;
+  function slotStatus(roomId, slotStartMin) {
+    if (!schedule) return null;
+    const step = SLOT_MINUTES;
+    const slotEndMin = slotStartMin + step;
 
-  const overlaps = (r) => {
-    if (r.room.id !== roomId) return false;
-    const start = new Date(r.startDateTime);
-    const end = new Date(r.endDateTime);
-    const rs = start.getHours() * 60 + start.getMinutes();
-    const re = end.getHours() * 60 + end.getMinutes();
-    return slotStartMin < re && slotEndMin > rs;
-  };
+    const overlaps = (r) => {
+      if (r.room.id !== roomId) return false;
+      const start = new Date(r.startDateTime);
+      const end = new Date(r.endDateTime);
+      const rs = start.getHours() * 60 + start.getMinutes();
+      const re = end.getHours() * 60 + end.getMinutes();
+      return slotStartMin < re && slotEndMin > rs;
+    };
 
-  // Prioritet: APPROVED preko PENDING (ako ikad dođe do čudnog stanja)
-  for (const r of schedule.approvedReservations || []) {
-    if (overlaps(r)) return "APPROVED";
+    // Prioritet: APPROVED preko PENDING (ako ikad dođe do čudnog stanja)
+    for (const r of schedule.approvedReservations || []) {
+      if (overlaps(r)) return "APPROVED";
+    }
+    for (const r of schedule.pendingReservations || []) {
+      if (overlaps(r)) return "PENDING";
+    }
+    return null;
   }
-  for (const r of schedule.pendingReservations || []) {
-    if (overlaps(r)) return "PENDING";
-  }
-  return null;
-}
 
   function withinWorkingHours(hhmmStart, hhmmEnd) {
     const s = parseTimeToMinutes(hhmmStart);
@@ -331,7 +344,9 @@ function slotStatus(roomId, slotStartMin) {
   async function cancelReservation(reservationId) {
     if (!user) return;
     try {
-      await axios.post(`/api/reservations/${reservationId}/cancel`, { userId: user.id });
+      await axios.post(`/api/reservations/${reservationId}/cancel`, {
+        userId: user.id,
+      });
       await loadMyReservations();
       await loadSchedule(date);
       if (isAdmin(user)) await loadPending();
@@ -359,28 +374,27 @@ function slotStatus(roomId, slotStartMin) {
   }
 
   // MVP login (seed) - UI je email/password kao pravi login
-async function loginMvp() {
-  try {
-    const email = loginEmail?.trim();
-    const password = loginPassword;
+  async function loginMvp() {
+    try {
+      const email = loginEmail?.trim();
+      const password = loginPassword;
 
-    if (!email || !password) {
-      alert("Unesi email i šifru.");
-      return;
+      if (!email || !password) {
+        alert("Unesi email i šifru.");
+        return;
+      }
+
+      const res = await axios.post("/api/auth/login", { email, password });
+
+      setUser(res.data);
+      localStorage.setItem("rr_user", JSON.stringify(res.data));
+      localStorage.setItem("rr_last_email", email);
+      setLoginPassword("");
+    } catch (e) {
+      const msg = e?.response?.data ?? "Greška pri login-u";
+      alert(typeof msg === "string" ? msg : JSON.stringify(msg));
     }
-
-    const res = await axios.post("/api/auth/login", { email, password });
-
-    setUser(res.data);
-    localStorage.setItem("rr_user", JSON.stringify(res.data));
-    localStorage.setItem("rr_last_email", email);
-    setLoginPassword("");
-  } catch (e) {
-    const msg = e?.response?.data ?? "Greška pri login-u";
-    alert(typeof msg === "string" ? msg : JSON.stringify(msg));
   }
-}
-
 
   function logout() {
     localStorage.removeItem("rr_user");
@@ -389,13 +403,19 @@ async function loginMvp() {
     setPending([]);
     setMyReservations([]);
     setAdminComment("");
-    setAdminTab("PENDING");
   }
 
   // ===== LOGIN SCREEN =====
   if (!user) {
     return (
-      <div style={{ padding: 20, fontFamily: "Arial, sans-serif", overflowX: "hidden", maxWidth: 520 }}>
+      <div
+        style={{
+          padding: 20,
+          fontFamily: "Arial, sans-serif",
+          overflowX: "hidden",
+          maxWidth: 520,
+        }}
+      >
         <h2 style={{ marginTop: 0 }}>Room Reservation – Login</h2>
 
         <div style={{ display: "grid", gap: 10 }}>
@@ -426,9 +446,15 @@ async function loginMvp() {
 
           <div style={{ fontSize: 12, opacity: 0.85, marginTop: 6 }}>
             MVP seed kredencijali (dok ne prebacimo na pravi backend login):
-            <div><b>admin@fon.rs</b> / <b>admin</b></div>
-            <div><b>marko@fon.rs</b> / <b>user</b></div>
-            <div><b>jelena@fon.rs</b> / <b>user</b></div>
+            <div>
+              <b>admin@fon.rs</b> / <b>admin</b>
+            </div>
+            <div>
+              <b>marko@fon.rs</b> / <b>user</b>
+            </div>
+            <div>
+              <b>jelena@fon.rs</b> / <b>user</b>
+            </div>
           </div>
         </div>
       </div>
@@ -466,88 +492,67 @@ async function loginMvp() {
 
         {schedule && (
           <div style={{ fontSize: 12, opacity: 0.85 }}>
-            Approved za dan: <b>{schedule.approvedReservations.length}</b>
+            Approved za dan: <b>{schedule.approvedReservations?.length ?? 0}</b>
           </div>
         )}
       </div>
 
-      {/* ADMIN TABS */}
+      {/* ADMIN (samo pending approvals) */}
       {isAdmin(user) ? (
         <div style={{ marginTop: 14, border: "1px solid #ddd", borderRadius: 10, padding: 12 }}>
           <h3 style={{ marginTop: 0 }}>Admin</h3>
 
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <button
-              onClick={() => setAdminTab("PENDING")}
-              style={{ fontWeight: adminTab === "PENDING" ? "bold" : "normal" }}
-            >
-              Pending approvals
-            </button>
-            <button
-              onClick={() => setAdminTab("MY")}
-              style={{ fontWeight: adminTab === "MY" ? "bold" : "normal" }}
-            >
-              My reservations
-            </button>
-          </div>
+          <div style={{ marginTop: 12 }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <button onClick={loadPending} disabled={pendingLoading}>
+                {pendingLoading ? "Učitavam..." : "Osveži pending"}
+              </button>
 
-          {adminTab === "PENDING" ? (
-            <div style={{ marginTop: 12 }}>
-              <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                <button onClick={loadPending} disabled={pendingLoading}>
-                  {pendingLoading ? "Učitavam..." : "Osveži pending"}
-                </button>
+              <label>
+                Komentar:&nbsp;
+                <input
+                  value={adminComment}
+                  onChange={(e) => setAdminComment(e.target.value)}
+                  style={{ width: 320 }}
+                />
+              </label>
+            </div>
 
-                <label>
-                  Komentar:&nbsp;
-                  <input
-                    value={adminComment}
-                    onChange={(e) => setAdminComment(e.target.value)}
-                    style={{ width: 320 }}
-                  />
-                </label>
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                {pending.length === 0 ? (
-                  <div style={{ opacity: 0.8 }}>Nema PENDING rezervacija.</div>
-                ) : (
-                  <div style={{ display: "grid", gap: 8 }}>
-                    {pending.map((r) => (
-                      <div
-                        key={r.id}
-                        style={{
-                          border: "1px solid #eee",
-                          borderRadius: 8,
-                          padding: 10,
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: 12,
-                          alignItems: "center",
-                        }}
-                      >
-                        <div style={{ fontSize: 13 }}>
-                          <b>#{r.id}</b> • {r.room?.code} • {r.startDateTime} → {r.endDateTime}
-                          <div style={{ opacity: 0.85 }}>
-                            {r.purpose} • {r.name} • by {r.createdBy?.email}
-                          </div>
-                        </div>
-
-                        <div style={{ display: "flex", gap: 8 }}>
-                          <button onClick={() => decideReservation(r.id, "APPROVED")}>Approve</button>
-                          <button onClick={() => decideReservation(r.id, "REJECTED")}>Reject</button>
+            <div style={{ marginTop: 10 }}>
+              {pending.length === 0 ? (
+                <div style={{ opacity: 0.8 }}>Nema PENDING rezervacija.</div>
+              ) : (
+                <div style={{ display: "grid", gap: 8 }}>
+                  {pending.map((r) => (
+                    <div
+                      key={r.id}
+                      style={{
+                        border: "1px solid #eee",
+                        borderRadius: 8,
+                        padding: 10,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        alignItems: "center",
+                      }}
+                    >
+                      <div style={{ fontSize: 13 }}>
+                        <b>#{r.id}</b> • {r.room?.code} • {r.startDateTime} → {r.endDateTime}
+                        <div style={{ opacity: 0.85 }}>
+                          {r.purpose} • {r.name} • by {r.createdBy?.email}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => decideReservation(r.id, "APPROVED")}>Approve</button>
+                        <button onClick={() => decideReservation(r.id, "REJECTED")}>Reject</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          ) : (
-            <div style={{ marginTop: 12, fontSize: 13, opacity: 0.9 }}>
-              Ovde admin vidi svoje rezervacije u listi (dole u “Moje rezervacije” sekciji) i može da ih otkaže.
-            </div>
-          )}
+          </div>
         </div>
       ) : null}
 
@@ -591,59 +596,83 @@ async function loginMvp() {
                   </div>
                 ))}
 
-                {timeSlots.map((t) => {
-                  const status = slotStatus(room.id, t); // "APPROVED" | "PENDING" | null
-                  const step = SLOT_MINUTES;
+                {schedule?.rooms?.map((room) => (
+                  <div key={room.id} style={{ display: "contents" }}>
+                    <div style={{ padding: 8, borderRight: "1px solid #eee" }}>
+                      <b>{room.code}</b>
+                    </div>
 
-                  const selected =
-                    selectedRoomId === room.id &&
-                    startHHMM === minutesToHHMM(t) &&
-                    endHHMM === minutesToHHMM(t + step);
+                    {timeSlots.map((t) => {
+                      const status = slotStatus(room.id, t); // "APPROVED" | "PENDING" | null
+                      const step = SLOT_MINUTES;
 
-                  const isApproved = status === "APPROVED";
-                  const isPending = status === "PENDING";
-                  const blocked = !!status; // i approved i pending blokiraju
+                      const selected =
+                        selectedRoomId === room.id &&
+                        startHHMM === minutesToHHMM(t) &&
+                        endHHMM === minutesToHHMM(t + step);
 
-                  return (
-                    <div
-                      key={t}
-                      onClick={() => onCellClick(room.id, t)}
-                      title={
-                        isApproved
-                          ? "Zauzeto (APPROVED)"
-                          : isPending
-                          ? "Na čekanju (PENDING) – nije dostupno"
-                          : "Klikni da izabereš slot"
-                      }
-                      style={{
-                        borderTop: "1px solid #eee",
-                        borderLeft: "1px solid #eee",
-                        height: 34,
+                      const isApproved = status === "APPROVED";
+                      const isPending = status === "PENDING";
+                      const blocked = isApproved || isPending;
 
-                        // background boje
-                        background: isApproved
-                          ? "#ffb3b3"    // crveno
-                          : isPending
-                          ? "#fff3b3"    // žuto
-                          : selected
-                          ? "#dff5ff"    // selektovano
-                          : "white",
+                      // 1) STVARNO blokiraj klik
+                      const handleClick = () => {
+                        if (blocked) return;
+                        onCellClick(room.id, t);
+                      };
 
-                        // ne dozvoli klik vizuelno
-                        cursor: blocked ? "not-allowed" : "pointer",
+                      // 2) background i border u jednoj logici (manje gresaka)
+                      const background = isApproved
+                        ? "#ffb3b3" // crveno
+                        : isPending
+                        ? "#fff3b3" // zuto
+                        : selected
+                        ? "#dff5ff" // selektovano
+                        : "white";
 
-                        // okvir (da se vidi status i kad je svetlija boja)
-                        boxShadow: isApproved
-                          ? "inset 0 0 0 2px #cc0000"
-                          : isPending
-                          ? "inset 0 0 0 2px #cc9900"
-                          : selected
-                          ? "inset 0 0 0 2px #0099cc"
-                          : "none",
-                      }}
-                    />
-                  );
-                })}
+                      const borderColor = isApproved
+                        ? "#cc0000"
+                        : isPending
+                        ? "#cc9900"
+                        : selected
+                        ? "#0099cc"
+                        : null;
+
+                      const title = isApproved
+                        ? "Zauzeto (APPROVED)"
+                        : isPending
+                        ? "Na cekanju (PENDING) – nije dostupno"
+                        : "Klikni da izaberes slot";
+
+                      return (
+                        <div
+                          key={`${room.id}-${t}`}
+                          onClick={handleClick}
+                          title={title}
+                          aria-disabled={blocked}
+                          style={{
+                            borderTop: "1px solid #eee",
+                            borderLeft: "1px solid #eee",
+                            height: 34,
+
+                            background,
+
+                            // 3) kad je blocked, da se vidi da je “zakljucano”
+                            cursor: blocked ? "not-allowed" : "pointer",
+                            opacity: blocked ? 0.85 : 1,
+
+                            // 4) border/outline umesto boxShadow (cesto izgleda urednije)
+                            outline: borderColor ? `2px solid ${borderColor}` : "none",
+                            outlineOffset: "-2px",
+
+                            // 5) onemoguci klik “fizicki” (bonus)
+                            pointerEvents: blocked ? "none" : "auto",
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -669,26 +698,15 @@ async function loginMvp() {
                 </select>
               </label>
 
-              
               <label>
-                
                 Od:&nbsp;
-                <TimeSelect
-                  value={startHHMM}
-                  onChange={setStartHHMM}
-                  hours={HOURS_FROM}
-                />
+                <TimeSelect value={startHHMM} onChange={setStartHHMM} hours={HOURS_FROM} />
               </label>
 
               <label>
                 Do:&nbsp;
-                <TimeSelect
-                  value={endHHMM}
-                  onChange={setEndHHMM}
-                  hours={HOURS_TO}
-                />
+                <TimeSelect value={endHHMM} onChange={setEndHHMM} hours={HOURS_TO} />
               </label>
-              
 
               <label>
                 Svrha:&nbsp;
