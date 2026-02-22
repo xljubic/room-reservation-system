@@ -41,6 +41,20 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     );
 
     @Query("""
+        select r from Reservation r
+        where r.room.id = :roomId
+          and r.status in :statuses
+          and r.startDateTime < :end
+          and r.endDateTime > :start
+        """)
+    List<Reservation> findOverlapsWithStatuses(
+            @Param("roomId") Long roomId,
+            @Param("statuses") List<ReservationStatus> statuses,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+
+    @Query("""
     select r from Reservation r
     where r.status = :status
       and r.startDateTime < :to
@@ -55,4 +69,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findByCreatedByIdOrderByStartDateTimeDesc(Long userId);
 
     List<Reservation> findByStatusOrderByCreatedAtAsc(ReservationStatus status);
+
+    List<Reservation> findByGroupIdOrderByStartDateTimeAsc(String groupId);
+
+    List<Reservation> findByStatusAndGroupIdIsNotNullOrderByCreatedAtAsc(ReservationStatus status);
 }

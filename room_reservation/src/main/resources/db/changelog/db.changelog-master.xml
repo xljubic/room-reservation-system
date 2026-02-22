@@ -10,6 +10,7 @@
     <include file="db/changelog/changes/002-seed.xml"/>
     <include file="db/changelog/changes/003-add-password-hash.xml"/>
     <include file="db/changelog/changes/004-seed-password-hash.xml"/>
+    <include file="db/changelog/changes/005-add-group-id.xml"/>
 
 </databaseChangeLog>
 

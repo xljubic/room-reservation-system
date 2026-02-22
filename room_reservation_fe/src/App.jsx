@@ -206,7 +206,7 @@ export default function App() {
   async function loadPending() {
     setPendingLoading(true);
     try {
-      const res = await axios.get(`/api/reservations/pending`, {
+      const res = await axios.get(`/api/reservations/pending-groups`, {
         params: { _ts: Date.now() },
         headers: { "Cache-Control": "no-cache" },
       });
@@ -315,13 +315,18 @@ export default function App() {
 
     try {
       const res = await axios.post("/api/reservations", {
-        roomId: selectedRoomId,
         createdById: user.id,
-        startDateTime: start,
-        endDateTime: end,
-        purpose,
+        date,              // "YYYY-MM-DD"
+        purpose,           // ENUM string (npr "VEZBE")
         name,
-        description,
+        items: [
+          {
+            roomId: selectedRoomId,
+            startTime: startHHMM,  // "HH:mm"
+            endTime: endHHMM,      // "HH:mm"
+            description,
+          },
+        ],
       });
 
       const created = res.data;
@@ -356,22 +361,22 @@ export default function App() {
     }
   }
 
-  async function decideReservation(reservationId, decision) {
-    if (!user) return;
-    try {
-      await axios.post(`/api/reservations/${reservationId}/decide`, {
-        adminId: user.id,
-        decision,
-        comment: adminComment || null,
-      });
-      setAdminComment("");
-      await loadPending();
-      await loadSchedule(date);
-    } catch (e) {
-      const msg = e?.response?.data ?? "Greška";
-      alert(typeof msg === "string" ? msg : JSON.stringify(msg));
-    }
+async function decideGroup(groupId, decision) {
+  if (!user) return;
+  try {
+    await axios.post(`/api/reservations/group/${groupId}/decide`, {
+      adminId: user.id,
+      decision,
+      comment: adminComment || null,
+    });
+    setAdminComment("");
+    await loadPending();
+    await loadSchedule(date);
+  } catch (e) {
+    const msg = e?.response?.data ?? "Greška";
+    alert(typeof msg === "string" ? msg : JSON.stringify(msg));
   }
+}
 
   // MVP login (seed) - UI je email/password kao pravi login
   async function loginMvp() {
@@ -524,30 +529,29 @@ export default function App() {
               ) : (
                 <div style={{ display: "grid", gap: 8 }}>
                   {pending.map((r) => (
-                    <div
-                      key={r.id}
-                      style={{
-                        border: "1px solid #eee",
-                        borderRadius: 8,
-                        padding: 10,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: 12,
-                        alignItems: "center",
-                      }}
-                    >
-                      <div style={{ fontSize: 13 }}>
-                        <b>#{r.id}</b> • {r.room?.code} • {r.startDateTime} → {r.endDateTime}
-                        <div style={{ opacity: 0.85 }}>
-                          {r.purpose} • {r.name} • by {r.createdBy?.email}
-                        </div>
-                      </div>
-
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button onClick={() => decideReservation(r.id, "APPROVED")}>Approve</button>
-                        <button onClick={() => decideReservation(r.id, "REJECTED")}>Reject</button>
-                      </div>
+                     <div key={g.groupId} style={{ border: "1px solid #ddd", padding: 12, marginBottom: 10 }}>
+                    <div style={{ fontWeight: 700 }}>
+                      Group: {g.groupId}
                     </div>
+
+                    <div style={{ fontSize: 14, marginTop: 4 }}>
+                      {g.purpose} • {g.name} • by {g.createdBy?.email}
+                    </div>
+
+                    <div style={{ marginTop: 8, paddingLeft: 12 }}>
+                      {(g.items || []).map((it) => (
+                        <div key={it.id} style={{ fontSize: 13 }}>
+                          #{it.id} • {it.room?.code} • {it.startDateTime} → {it.endDateTime}
+                          {it.description ? ` • ${it.description}` : ""}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+                      <button onClick={() => decideGroup(g.groupId, "APPROVED")}>Approve</button>
+                      <button onClick={() => decideGroup(g.groupId, "REJECTED")}>Reject</button>
+                    </div>
+                  </div>
                   ))}
                 </div>
               )}

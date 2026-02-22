@@ -17,6 +17,9 @@ import rs.fon.room_reservation.model.enums.ReservationStatus;
 @Table(name = "reservations")
 public class Reservation {
 
+    @Column(name = "group_id")
+    private String groupId;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -131,5 +134,13 @@ public class Reservation {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
     }
 }
