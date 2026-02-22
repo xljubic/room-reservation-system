@@ -21,6 +21,7 @@ public class ScheduleResponse {
 
     private List<Room> rooms;
     private List<Reservation> approvedReservations;
+    private List<Reservation> pendingReservations;
 
     public String getDate() {
         return date;
@@ -68,5 +69,13 @@ public class ScheduleResponse {
 
     public void setApprovedReservations(List<Reservation> approvedReservations) {
         this.approvedReservations = approvedReservations;
+    }
+
+    public List<Reservation> getPendingReservations() {
+        return pendingReservations;
+    }
+
+    public void setPendingReservations(List<Reservation> pendingReservations) {
+        this.pendingReservations = pendingReservations;
     }
 }

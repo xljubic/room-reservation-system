@@ -109,9 +109,14 @@ public class ReservationController {
         }
 
         // 4) Spreči preklapanje sa već APPROVED rezervacijama
-        boolean hasOverlap = !reservationRepository
+        boolean overlapApproved  = !reservationRepository
                 .findOverlaps(room.getId(), ReservationStatus.APPROVED, req.getStartDateTime(), req.getEndDateTime())
                 .isEmpty();
+        boolean overlapPending = !reservationRepository
+                .findOverlaps(room.getId(), ReservationStatus.PENDING, req.getStartDateTime(), req.getEndDateTime())
+                .isEmpty();
+        boolean hasOverlap = overlapApproved || overlapPending;
+
 
         if (hasOverlap) {
             return ResponseEntity.badRequest().body("Room is not available in the selected time range.");
@@ -232,6 +237,9 @@ public class ReservationController {
         var approved = reservationRepository.findByStatusOverlappingRange(
                 ReservationStatus.APPROVED, from, to
         );
+        var pending = reservationRepository.findByStatusOverlappingRange(
+                ReservationStatus.PENDING, from, to
+        );
 
         ScheduleResponse resp = new ScheduleResponse();
         resp.setDate(date);
@@ -240,6 +248,7 @@ public class ReservationController {
         resp.setSlotMinutes(30);
         resp.setRooms(rooms);
         resp.setApprovedReservations(approved);
+        resp.setPendingReservations(pending);
 
         return resp;
     }

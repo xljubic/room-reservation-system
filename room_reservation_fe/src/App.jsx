@@ -236,24 +236,29 @@ export default function App() {
     return slots;
   }, [schedule]);
 
-  function slotBlocked(roomId, slotStartMin) {
-    if (!schedule) return false;
-    const step = SLOT_MINUTES;
-    const slotEndMin = slotStartMin + step;
+function slotStatus(roomId, slotStartMin) {
+  if (!schedule) return null;
+  const step = SLOT_MINUTES;
+  const slotEndMin = slotStartMin + step;
 
-    for (const r of schedule.approvedReservations) {
-      if (r.room.id !== roomId) continue;
+  const overlaps = (r) => {
+    if (r.room.id !== roomId) return false;
+    const start = new Date(r.startDateTime);
+    const end = new Date(r.endDateTime);
+    const rs = start.getHours() * 60 + start.getMinutes();
+    const re = end.getHours() * 60 + end.getMinutes();
+    return slotStartMin < re && slotEndMin > rs;
+  };
 
-      const start = new Date(r.startDateTime);
-      const end = new Date(r.endDateTime);
-
-      const rs = start.getHours() * 60 + start.getMinutes();
-      const re = end.getHours() * 60 + end.getMinutes();
-
-      if (slotStartMin < re && slotEndMin > rs) return true;
-    }
-    return false;
+  // Prioritet: APPROVED preko PENDING (ako ikad dođe do čudnog stanja)
+  for (const r of schedule.approvedReservations || []) {
+    if (overlaps(r)) return "APPROVED";
   }
+  for (const r of schedule.pendingReservations || []) {
+    if (overlaps(r)) return "PENDING";
+  }
+  return null;
+}
 
   function withinWorkingHours(hhmmStart, hhmmEnd) {
     const s = parseTimeToMinutes(hhmmStart);
@@ -271,7 +276,7 @@ export default function App() {
     const end = minutesToHHMM(slotStartMin + step);
 
     if (!withinWorkingHours(start, end)) return;
-    if (slotBlocked(roomId, slotStartMin)) return;
+    if (slotStatus(roomId, slotStartMin)) return;
 
     setSelectedRoomId(roomId);
     //DODATOOOO
@@ -586,45 +591,59 @@ async function loginMvp() {
                   </div>
                 ))}
 
-                {schedule.rooms.map((room) => (
-                  <div key={room.id} style={{ display: "contents" }}>
-                    <div style={{ padding: 8, borderTop: "1px solid #eee", borderRight: "1px solid #eee" }}>
-                      <div style={{ fontWeight: "bold" }}>{room.code}</div>
-                      <div style={{ fontSize: 12, opacity: 0.8 }}>
-                        {room.roomType} • {room.building} • {room.capacity}
-                      </div>
-                    </div>
+                {timeSlots.map((t) => {
+                  const status = slotStatus(room.id, t); // "APPROVED" | "PENDING" | null
+                  const step = SLOT_MINUTES;
 
-                    {timeSlots.map((t) => {
-                      const blocked = slotBlocked(room.id, t);
-                      const step = SLOT_MINUTES;
-                      const selected =
-                        selectedRoomId === room.id &&
-                        startHHMM === minutesToHHMM(t) &&
-                        endHHMM === minutesToHHMM(t + step);
+                  const selected =
+                    selectedRoomId === room.id &&
+                    startHHMM === minutesToHHMM(t) &&
+                    endHHMM === minutesToHHMM(t + step);
 
-                      return (
-                        <div
-                          key={t}
-                          onClick={() => onCellClick(room.id, t)}
-                          title={blocked ? "Zauzeto (APPROVED)" : "Klikni da izabereš slot"}
-                          style={{
-                            borderTop: "1px solid #eee",
-                            borderLeft: "1px solid #eee",
-                            height: 34,
-                            background: blocked ? "#ffb3b3" : selected ? "#dff5ff" : "white",
-                            cursor: blocked ? "not-allowed" : "pointer",
-                            boxShadow: blocked
-                              ? "inset 0 0 0 2px #cc0000"
-                              : selected
-                              ? "inset 0 0 0 2px #0099cc"
-                              : "none",
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                ))}
+                  const isApproved = status === "APPROVED";
+                  const isPending = status === "PENDING";
+                  const blocked = !!status; // i approved i pending blokiraju
+
+                  return (
+                    <div
+                      key={t}
+                      onClick={() => onCellClick(room.id, t)}
+                      title={
+                        isApproved
+                          ? "Zauzeto (APPROVED)"
+                          : isPending
+                          ? "Na čekanju (PENDING) – nije dostupno"
+                          : "Klikni da izabereš slot"
+                      }
+                      style={{
+                        borderTop: "1px solid #eee",
+                        borderLeft: "1px solid #eee",
+                        height: 34,
+
+                        // background boje
+                        background: isApproved
+                          ? "#ffb3b3"    // crveno
+                          : isPending
+                          ? "#fff3b3"    // žuto
+                          : selected
+                          ? "#dff5ff"    // selektovano
+                          : "white",
+
+                        // ne dozvoli klik vizuelno
+                        cursor: blocked ? "not-allowed" : "pointer",
+
+                        // okvir (da se vidi status i kad je svetlija boja)
+                        boxShadow: isApproved
+                          ? "inset 0 0 0 2px #cc0000"
+                          : isPending
+                          ? "inset 0 0 0 2px #cc9900"
+                          : selected
+                          ? "inset 0 0 0 2px #0099cc"
+                          : "none",
+                      }}
+                    />
+                  );
+                })}
               </div>
             </div>
           </div>
