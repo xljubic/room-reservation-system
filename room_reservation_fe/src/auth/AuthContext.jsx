@@ -19,8 +19,10 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const u = await apiLogin(email, password);
 
-    const fullNameFromParts = [u?.firstName, u?.lastName].filter(Boolean).join(" ").trim() || "";
+    const fullNameFromParts =
+      [u?.firstName, u?.lastName].filter(Boolean).join(" ").trim() || "";
 
+    // normalize response fields (so frontend doesn't crash if backend differs)
     const normalized = {
       id: u?.id ?? u?.userId ?? u?.user?.id ?? null,
       email: u?.email ?? u?.username ?? email,
@@ -47,6 +49,6 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth mora biti korišćen unutar <AuthProvider>.");
+  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>.");
   return ctx;
 }

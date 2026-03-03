@@ -16,18 +16,15 @@ function ProtectedLayout() {
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <div style={{ minHeight: "100vh" }}>
+    <div style={{ minHeight: "100vh", background: "#0b1220", color: "white" }}>
       <Navbar />
-      <div style={{ padding: 16 }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: 16 }}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/create" element={<CreateReservationPage />} />
           <Route path="/mine" element={<MyReservationsPage />} />
-          <Route
-            path="/pending"
-            element={user?.role === "ADMIN" ? <PendingReservationsPage /> : <Navigate to="/" replace />}
-          />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/pending" element={<PendingReservationsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
@@ -40,7 +37,10 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
+      <Route
+        path="/login"
+        element={user ? <Navigate to="/" replace /> : <LoginPage />}
+      />
       <Route path="/*" element={<ProtectedLayout />} />
     </Routes>
   );

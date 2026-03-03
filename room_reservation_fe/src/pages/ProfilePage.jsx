@@ -116,7 +116,6 @@ export default function ProfilePage() {
       setNewPass1("");
       setNewPass2("");
 
-      // zatvori modal posle kratkog vremena (bez async “čekaj”, samo UX)
       setTimeout(() => {
         closeModal();
         setOk("");
@@ -129,8 +128,8 @@ export default function ProfilePage() {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto" }}>
-      <h2 style={{ marginTop: 0 }}>Moj Profil</h2>
+    <div style={{ maxWidth: 900, margin: "30px auto", padding: 16 }}>
+      <h1 style={{ marginTop: 0 }}>Moj Profil</h1>
 
       <div
         style={{
@@ -141,13 +140,21 @@ export default function ProfilePage() {
         }}
       >
         <div style={{ display: "grid", gap: 8 }}>
-          <div><b>Ime i prezime:</b> {fullName}</div>
-          <div><b>Email:</b> {user?.email || "-"}</div>
-          <div><b>Uloga:</b> {user?.role || "USER"}</div>
-          <div><b>User ID:</b> {user?.id ?? "-"}</div>
+          <div>
+            <b>Ime i prezime:</b> {fullName}
+          </div>
+          <div>
+            <b>Email:</b> {user?.email || "-"}
+          </div>
+          <div>
+            <b>Uloga:</b> {user?.role || "USER"}
+          </div>
+          <div>
+            <b>User ID:</b> {user?.id ?? "-"}
+          </div>
         </div>
 
-        <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ marginTop: 16 }}>
           <button
             onClick={() => {
               setOk("");
@@ -172,25 +179,41 @@ export default function ProfilePage() {
         <div style={{ display: "grid", gap: 10 }}>
           <div style={{ display: "grid", gap: 6 }}>
             <label>Stara šifra</label>
-            <input type="password" value={oldPass} onChange={(e) => setOldPass(e.target.value)} />
+            <input
+              type="password"
+              value={oldPass}
+              onChange={(e) => setOldPass(e.target.value)}
+              style={{ padding: 10, borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)" }}
+            />
           </div>
 
           <div style={{ display: "grid", gap: 6 }}>
             <label>Nova šifra</label>
-            <input type="password" value={newPass1} onChange={(e) => setNewPass1(e.target.value)} />
+            <input
+              type="password"
+              value={newPass1}
+              onChange={(e) => setNewPass1(e.target.value)}
+              style={{ padding: 10, borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)" }}
+            />
           </div>
 
           <div style={{ display: "grid", gap: 6 }}>
             <label>Nova šifra (ponovo)</label>
-            <input type="password" value={newPass2} onChange={(e) => setNewPass2(e.target.value)} />
+            <input
+              type="password"
+              value={newPass2}
+              onChange={(e) => setNewPass2(e.target.value)}
+              style={{ padding: 10, borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)" }}
+            />
           </div>
 
-          {err && <div style={{ color: "#ff6b6b" }}>{err}</div>}
-          {ok && <div style={{ color: "#22c55e" }}>{ok}</div>}
+          {err ? <div style={{ color: "#ff6b6b" }}>{err}</div> : null}
+          {ok ? <div style={{ color: "#7CFF7C" }}>{ok}</div> : null}
 
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 6 }}>
             <button
               onClick={closeModal}
+              disabled={loading}
               style={{
                 padding: "10px 12px",
                 borderRadius: 10,
@@ -204,8 +227,8 @@ export default function ProfilePage() {
             </button>
 
             <button
-              disabled={loading}
               onClick={submit}
+              disabled={loading}
               style={{
                 padding: "10px 12px",
                 borderRadius: 10,
@@ -213,7 +236,6 @@ export default function ProfilePage() {
                 background: "#2563eb",
                 color: "white",
                 cursor: "pointer",
-                opacity: loading ? 0.7 : 1,
               }}
             >
               {loading ? "..." : "Sačuvaj"}
