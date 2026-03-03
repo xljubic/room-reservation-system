@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import { apiLogin } from "../api/api.js";
 
 const AuthContext = createContext(null);
-
 const LS_KEY = "rrs_user";
 
 export function AuthProvider({ children }) {
@@ -20,12 +19,13 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const u = await apiLogin(email, password);
 
-    // Normalizacija, da ne puca ako backend vrati drugačija polja.
+    // backend vraća: id, email, role, firstName, lastName :contentReference[oaicite:6]{index=6}
     const normalized = {
-      id: u?.id ?? u?.userId ?? u?.user?.id ?? null,
-      email: u?.email ?? u?.username ?? email,
-      role: u?.role ?? u?.userRole ?? u?.user?.role ?? "USER",
-      fullName: u?.fullName ?? u?.name ?? "",
+      id: u?.id ?? null,
+      email: u?.email ?? email,
+      role: u?.role ?? "USER",
+      firstName: u?.firstName ?? "",
+      lastName: u?.lastName ?? "",
     };
 
     setUser(normalized);

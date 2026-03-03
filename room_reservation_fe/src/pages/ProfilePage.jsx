@@ -1,8 +1,17 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { apiChangePassword, extractApiErrorMessage } from "../api/api.js";
 
-function BannerModal({ open, title, children, onClose }) {
+const COLORS = {
+  page: "#121212",        // normal dark mode
+  card: "#1e1e1e",
+  border: "rgba(255,255,255,0.10)",
+  text: "#eaeaea",
+  muted: "rgba(255,255,255,0.70)",
+  inputBg: "#2a2a2a",
+};
+
+function Modal({ open, title, children, onClose }) {
   if (!open) return null;
 
   return (
@@ -11,7 +20,7 @@ function BannerModal({ open, title, children, onClose }) {
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.65)",
+        background: "rgba(0,0,0,0.55)",
         display: "flex",
         alignItems: "flex-start",
         justifyContent: "center",
@@ -24,11 +33,11 @@ function BannerModal({ open, title, children, onClose }) {
         style={{
           width: "min(720px, 100%)",
           marginTop: 24,
-          background: "#0b0b0b",
-          border: "1px solid rgba(255,255,255,0.14)",
+          background: COLORS.card,
+          border: `1px solid ${COLORS.border}`,
           borderRadius: 14,
           padding: 16,
-          color: "white",
+          color: COLORS.text,
           boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
         }}
       >
@@ -39,9 +48,9 @@ function BannerModal({ open, title, children, onClose }) {
             style={{
               padding: "6px 10px",
               borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.15)",
-              background: "rgba(255,255,255,0.10)",
-              color: "white",
+              border: `1px solid ${COLORS.border}`,
+              background: "rgba(255,255,255,0.08)",
+              color: COLORS.text,
               cursor: "pointer",
             }}
           >
@@ -58,10 +67,10 @@ function BannerModal({ open, title, children, onClose }) {
 export default function ProfilePage() {
   const { user } = useAuth();
 
-  const firstName = user?.firstName ?? "";
-  const lastName = user?.lastName ?? "";
-  const email = user?.email ?? "";
-  const role = user?.role ?? "";
+  const firstName = user?.firstName || "-";
+  const lastName = user?.lastName || "-";
+  const email = user?.email || "-";
+  const role = user?.role || "-";
 
   const [open, setOpen] = useState(false);
   const [oldPass, setOldPass] = useState("");
@@ -91,6 +100,7 @@ export default function ProfilePage() {
 
     setLoading(true);
     try {
+      // Backend očekuje userId, oldPassword, newPassword :contentReference[oaicite:5]{index=5}
       await apiChangePassword({
         userId: user?.id,
         oldPassword: oldPass,
@@ -105,43 +115,33 @@ export default function ProfilePage() {
     }
   };
 
-  const row = useMemo(
-    () => ({
-      label: {
-        color: "rgba(255,255,255,0.75)",
-        width: 90,
-        display: "inline-block",
-      },
-      value: { color: "white", fontWeight: 600 },
-    }),
-    []
-  );
+  const labelStyle = { color: COLORS.muted, width: 90, display: "inline-block" };
+  const valueStyle = { color: COLORS.text, fontWeight: 700 };
 
   return (
-    <div style={{ maxWidth: 900, margin: "24px auto", padding: 16 }}>
-      <h1 style={{ marginTop: 0, color: "white", fontSize: 56, lineHeight: 1.05 }}>Moj profil</h1>
+    <div style={{ maxWidth: 900, margin: "24px auto", padding: 16, color: COLORS.text }}>
+      <h1 style={{ marginTop: 0, fontSize: 56, lineHeight: 1.05 }}>Moj profil</h1>
 
       <div
         style={{
-          background: "#0b0b0b",
-          border: "1px solid rgba(255,255,255,0.12)",
+          background: COLORS.card,
+          border: `1px solid ${COLORS.border}`,
           borderRadius: 16,
           padding: 20,
-          color: "white",
         }}
       >
         <div style={{ display: "grid", gap: 12, fontSize: 18 }}>
           <div>
-            <span style={row.label}>Ime:</span> <span style={row.value}>{firstName || "-"}</span>
+            <span style={labelStyle}>Ime:</span> <span style={valueStyle}>{firstName}</span>
           </div>
           <div>
-            <span style={row.label}>Prezime:</span> <span style={row.value}>{lastName || "-"}</span>
+            <span style={labelStyle}>Prezime:</span> <span style={valueStyle}>{lastName}</span>
           </div>
           <div>
-            <span style={row.label}>Email:</span> <span style={row.value}>{email || "-"}</span>
+            <span style={labelStyle}>Email:</span> <span style={valueStyle}>{email}</span>
           </div>
           <div>
-            <span style={row.label}>Role:</span> <span style={row.value}>{role || "-"}</span>
+            <span style={labelStyle}>Role:</span> <span style={valueStyle}>{role}</span>
           </div>
         </div>
 
@@ -151,11 +151,11 @@ export default function ProfilePage() {
             style={{
               padding: "10px 14px",
               borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.18)",
+              border: `1px solid ${COLORS.border}`,
               background: "rgba(255,255,255,0.08)",
-              color: "white",
+              color: COLORS.text,
               cursor: "pointer",
-              fontWeight: 700,
+              fontWeight: 800,
             }}
           >
             Promeni šifru
@@ -163,7 +163,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <BannerModal open={open} title="Promena šifre" onClose={close}>
+      <Modal open={open} title="Promena šifre" onClose={close}>
         <div style={{ display: "grid", gap: 10 }}>
           <div style={{ display: "grid", gap: 6 }}>
             <label>Stara šifra</label>
@@ -174,9 +174,10 @@ export default function ProfilePage() {
               style={{
                 padding: 10,
                 borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.15)",
-                background: "rgba(255,255,255,0.06)",
-                color: "white",
+                border: `1px solid ${COLORS.border}`,
+                background: COLORS.inputBg,
+                color: COLORS.text,
+                outline: "none",
               }}
             />
           </div>
@@ -190,9 +191,10 @@ export default function ProfilePage() {
               style={{
                 padding: 10,
                 borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.15)",
-                background: "rgba(255,255,255,0.06)",
-                color: "white",
+                border: `1px solid ${COLORS.border}`,
+                background: COLORS.inputBg,
+                color: COLORS.text,
+                outline: "none",
               }}
             />
           </div>
@@ -206,9 +208,10 @@ export default function ProfilePage() {
               style={{
                 padding: 10,
                 borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.15)",
-                background: "rgba(255,255,255,0.06)",
-                color: "white",
+                border: `1px solid ${COLORS.border}`,
+                background: COLORS.inputBg,
+                color: COLORS.text,
+                outline: "none",
               }}
             />
           </div>
@@ -223,9 +226,9 @@ export default function ProfilePage() {
               style={{
                 padding: "10px 12px",
                 borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.15)",
-                background: "rgba(255,255,255,0.10)",
-                color: "white",
+                border: `1px solid ${COLORS.border}`,
+                background: "rgba(255,255,255,0.08)",
+                color: COLORS.text,
                 cursor: "pointer",
               }}
             >
@@ -238,18 +241,18 @@ export default function ProfilePage() {
               style={{
                 padding: "10px 12px",
                 borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.15)",
+                border: `1px solid ${COLORS.border}`,
                 background: "#2563eb",
                 color: "white",
                 cursor: "pointer",
-                fontWeight: 700,
+                fontWeight: 800,
               }}
             >
               {loading ? "..." : "Promeni"}
             </button>
           </div>
         </div>
-      </BannerModal>
+      </Modal>
     </div>
   );
 }

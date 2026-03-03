@@ -16,7 +16,7 @@ function ProtectedLayout() {
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#000" }}>
+    <div style={{ minHeight: "100vh", background: "#121212" }}>
       <Navbar />
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: 16 }}>
         <Routes>
