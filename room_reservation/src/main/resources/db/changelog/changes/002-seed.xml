@@ -7,34 +7,64 @@
            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
 
     <!-- USERS -->
-    <changeSet id="005-seed-users" author="sale">
+    <changeSet id="seed-users-5-professors" author="sale">
+
         <insert tableName="users">
-            <column name="first_name" value="Admin"/>
-            <column name="last_name" value="User"/>
-            <column name="email" value="admin@fon.rs"/>
+            <column name="first_name" value="Dušan"/>
+            <column name="last_name" value="Savić"/>
+            <column name="email" value="savic.dusan@fon.bg.ac.rs"/>
             <column name="role" value="ADMIN"/>
         </insert>
 
         <insert tableName="users">
-            <column name="first_name" value="Marko"/>
-            <column name="last_name" value="Markovic"/>
-            <column name="email" value="marko@fon.rs"/>
+            <column name="first_name" value="Saša"/>
+            <column name="last_name" value="Lazarević"/>
+            <column name="email" value="lazarevic.sasa@fon.bg.ac.rs"/>
             <column name="role" value="USER"/>
         </insert>
 
         <insert tableName="users">
-            <column name="first_name" value="Jelena"/>
-            <column name="last_name" value="Jovanovic"/>
-            <column name="email" value="jelena@fon.rs"/>
+            <column name="first_name" value="Tatjana"/>
+            <column name="last_name" value="Stojanović"/>
+            <column name="email" value="tatjana.stojanovic@fon.bg.ac.rs"/>
             <column name="role" value="USER"/>
         </insert>
+
+        <insert tableName="users">
+            <column name="first_name" value="Miloš"/>
+            <column name="last_name" value="Milić"/>
+            <column name="email" value="milos.milic@fon.bg.ac.rs"/>
+            <column name="role" value="USER"/>
+        </insert>
+
+        <insert tableName="users">
+            <column name="first_name" value="Ilija"/>
+            <column name="last_name" value="Antović"/>
+            <column name="email" value="ilija.antovic@fon.bg.ac.rs"/>
+            <column name="role" value="USER"/>
+        </insert>
+
     </changeSet>
 
     <!-- ROOMS -->
-    <changeSet id="006-seed-rooms" author="sale">
+    <changeSet id="seed-rooms-from-pdfs" author="sale">
+
+        <!-- 1) AMFITEATRI 1-5 -->
+        <!-- Stara zgrada: Amfiteatar 1 (-1), Amfiteatar 2 (0), Amfiteatar 3 (0) -->
+        <!-- Nova zgrada: Amfiteatar 4 (1), Amfiteatar 5 (2) -->
+        <!-- (prema PDF) -->
         <insert tableName="rooms">
-            <column name="code" value="A1"/>
-            <column name="capacity" valueNumeric="120"/>
+            <column name="code" value="AMFITEATAR 1"/>
+            <column name="capacity" valueNumeric="200"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="-1"/>
+            <column name="room_type" value="AMFITEATAR"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+
+        <insert tableName="rooms">
+            <column name="code" value="AMFITEATAR 2"/>
+            <column name="capacity" valueNumeric="180"/>
             <column name="building" value="STARA_ZGRADA"/>
             <column name="floor_level" valueNumeric="0"/>
             <column name="room_type" value="AMFITEATAR"/>
@@ -42,22 +72,260 @@
         </insert>
 
         <insert tableName="rooms">
-            <column name="code" value="R201"/>
-            <column name="capacity" valueNumeric="30"/>
+            <column name="code" value="AMFITEATAR 3"/>
+            <column name="capacity" valueNumeric="160"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="0"/>
+            <column name="room_type" value="AMFITEATAR"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+
+        <insert tableName="rooms">
+            <column name="code" value="AMFITEATAR 4"/>
+            <column name="capacity" valueNumeric="150"/>
+            <column name="building" value="NOVA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="1"/>
+            <column name="room_type" value="AMFITEATAR"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+
+        <insert tableName="rooms">
+            <column name="code" value="AMFITEATAR 5"/>
+            <column name="capacity" valueNumeric="140"/>
             <column name="building" value="NOVA_ZGRADA"/>
             <column name="floor_level" valueNumeric="2"/>
+            <column name="room_type" value="AMFITEATAR"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+
+        <!-- 2) SALE (ucionice + racunarske sale), sortirano po broju -->
+        <!-- STARA ZGRADA - nivo -1: SALA 06,07,08,09 -->
+        <!-- 30% RS u staroj zgradi: izabrao sam 06,07,20,21,30 kao RACUNARSKA_SALA (5/15 ≈ 33%) -->
+        <insert tableName="rooms">
+            <column name="code" value="SALA 06"/>
+            <column name="capacity" valueNumeric="30"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="-1"/>
             <column name="room_type" value="RACUNARSKA_SALA"/>
             <column name="number_of_computers" valueNumeric="30"/>
         </insert>
 
         <insert tableName="rooms">
-            <column name="code" value="U105"/>
+            <column name="code" value="SALA 07"/>
+            <column name="capacity" valueNumeric="30"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="-1"/>
+            <column name="room_type" value="RACUNARSKA_SALA"/>
+            <column name="number_of_computers" valueNumeric="30"/>
+        </insert>
+
+        <insert tableName="rooms">
+            <column name="code" value="SALA 08"/>
             <column name="capacity" valueNumeric="40"/>
             <column name="building" value="STARA_ZGRADA"/>
-            <column name="floor_level" valueNumeric="1"/>
+            <column name="floor_level" valueNumeric="-1"/>
             <column name="room_type" value="UCIONICA"/>
             <column name="number_of_computers" valueNumeric="0"/>
         </insert>
+
+        <insert tableName="rooms">
+            <column name="code" value="SALA 09"/>
+            <column name="capacity" valueNumeric="40"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="-1"/>
+            <column name="room_type" value="UCIONICA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+
+        <!-- STARA ZGRADA - prizemlje / visoko prizemlje: SALA 11-19 -->
+        <insert tableName="rooms">
+            <column name="code" value="SALA 11"/>
+            <column name="capacity" valueNumeric="50"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="0"/>
+            <column name="room_type" value="UCIONICA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+        <insert tableName="rooms">
+            <column name="code" value="SALA 12"/>
+            <column name="capacity" valueNumeric="50"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="0"/>
+            <column name="room_type" value="UCIONICA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+        <insert tableName="rooms">
+            <column name="code" value="SALA 13"/>
+            <column name="capacity" valueNumeric="40"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="0"/>
+            <column name="room_type" value="UCIONICA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+        <insert tableName="rooms">
+            <column name="code" value="SALA 14"/>
+            <column name="capacity" valueNumeric="40"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="0"/>
+            <column name="room_type" value="UCIONICA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+        <insert tableName="rooms">
+            <column name="code" value="SALA 15"/>
+            <column name="capacity" valueNumeric="40"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="0"/>
+            <column name="room_type" value="UCIONICA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+        <insert tableName="rooms">
+            <column name="code" value="SALA 16"/>
+            <column name="capacity" valueNumeric="40"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="0"/>
+            <column name="room_type" value="UCIONICA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+        <insert tableName="rooms">
+            <column name="code" value="SALA 17"/>
+            <column name="capacity" valueNumeric="40"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="0"/>
+            <column name="room_type" value="UCIONICA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+        <insert tableName="rooms">
+            <column name="code" value="SALA 18"/>
+            <column name="capacity" valueNumeric="40"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="0"/>
+            <column name="room_type" value="UCIONICA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+        <insert tableName="rooms">
+            <column name="code" value="SALA 19"/>
+            <column name="capacity" valueNumeric="40"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="0"/>
+            <column name="room_type" value="UCIONICA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+
+        <!-- STARA ZGRADA 1. sprat: SALA 20,21 -->
+        <insert tableName="rooms">
+            <column name="code" value="SALA 20"/>
+            <column name="capacity" valueNumeric="30"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="1"/>
+            <column name="room_type" value="RACUNARSKA_SALA"/>
+            <column name="number_of_computers" valueNumeric="30"/>
+        </insert>
+
+        <insert tableName="rooms">
+            <column name="code" value="SALA 21"/>
+            <column name="capacity" valueNumeric="40"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="1"/>
+            <column name="room_type" value="RACUNARSKA_SALA"/>
+            <column name="number_of_computers" valueNumeric="40"/>
+        </insert>
+
+        <!-- STARA ZGRADA 2. sprat: SALA 30 -->
+        <insert tableName="rooms">
+            <column name="code" value="SALA 30"/>
+            <column name="capacity" valueNumeric="30"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="2"/>
+            <column name="room_type" value="RACUNARSKA_SALA"/>
+            <column name="number_of_computers" valueNumeric="30"/>
+        </insert>
+
+        <!-- NOVA ZGRADA 1. sprat: SALA 40 -->
+        <insert tableName="rooms">
+            <column name="code" value="SALA 40"/>
+            <column name="capacity" valueNumeric="40"/>
+            <column name="building" value="NOVA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="1"/>
+            <column name="room_type" value="RACUNARSKA_SALA"/>
+            <column name="number_of_computers" valueNumeric="40"/>
+        </insert>
+
+        <!-- NOVA ZGRADA 2. sprat: SALA 50 -->
+        <insert tableName="rooms">
+            <column name="code" value="SALA 50"/>
+            <column name="capacity" valueNumeric="40"/>
+            <column name="building" value="NOVA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="2"/>
+            <column name="room_type" value="RACUNARSKA_SALA"/>
+            <column name="number_of_computers" valueNumeric="40"/>
+        </insert>
+
+        <!-- NOVA ZGRADA 3. sprat: SALA 60,61,62 -->
+        <insert tableName="rooms">
+            <column name="code" value="SALA 60"/>
+            <column name="capacity" valueNumeric="30"/>
+            <column name="building" value="NOVA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="3"/>
+            <column name="room_type" value="RACUNARSKA_SALA"/>
+            <column name="number_of_computers" valueNumeric="30"/>
+        </insert>
+
+        <insert tableName="rooms">
+            <column name="code" value="SALA 61"/>
+            <column name="capacity" valueNumeric="30"/>
+            <column name="building" value="NOVA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="3"/>
+            <column name="room_type" value="RACUNARSKA_SALA"/>
+            <column name="number_of_computers" valueNumeric="30"/>
+        </insert>
+
+        <insert tableName="rooms">
+            <column name="code" value="SALA 62"/>
+            <column name="capacity" valueNumeric="30"/>
+            <column name="building" value="NOVA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="3"/>
+            <column name="room_type" value="RACUNARSKA_SALA"/>
+            <column name="number_of_computers" valueNumeric="30"/>
+        </insert>
+
+        <!-- 3) CITAONICE -->
+        <insert tableName="rooms">
+            <column name="code" value="STARA CITAONICA"/>
+            <column name="capacity" valueNumeric="80"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="0"/>
+            <column name="room_type" value="CITAONICA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+
+        <insert tableName="rooms">
+            <column name="code" value="NOVA CITAONICA"/>
+            <column name="capacity" valueNumeric="120"/>
+            <column name="building" value="NOVA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="0"/>
+            <column name="room_type" value="CITAONICA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+
+        <!-- 4) KONFERENCIJSKE SALE -->
+        <insert tableName="rooms">
+            <column name="code" value="STARA KONFERENCIJSKA SALA"/>
+            <column name="capacity" valueNumeric="40"/>
+            <column name="building" value="STARA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="-1"/>
+            <column name="room_type" value="KONFERENCIJSKA_SALA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+
+        <insert tableName="rooms">
+            <column name="code" value="NOVA KONFERENCIJSKA SALA"/>
+            <column name="capacity" valueNumeric="60"/>
+            <column name="building" value="NOVA_ZGRADA"/>
+            <column name="floor_level" valueNumeric="3"/>
+            <column name="room_type" value="KONFERENCIJSKA_SALA"/>
+            <column name="number_of_computers" valueNumeric="0"/>
+        </insert>
+
     </changeSet>
 
 </databaseChangeLog>
