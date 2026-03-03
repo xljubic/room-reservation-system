@@ -19,10 +19,9 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const u = await apiLogin(email, password);
 
-    const fullNameFromParts =
-      [u?.firstName, u?.lastName].filter(Boolean).join(" ").trim() || "";
+    const fullNameFromParts = [u?.firstName, u?.lastName].filter(Boolean).join(" ").trim() || "";
 
-    // Normalizacija, da ne puca ako backend vrati drugačija polja.
+    // Normalizacija (da ne puca ako backend vrati drugačija polja)
     const normalized = {
       id: u?.id ?? u?.userId ?? u?.user?.id ?? null,
       email: u?.email ?? u?.username ?? email,
@@ -43,9 +42,14 @@ export function AuthProvider({ children }) {
   };
 
   const value = useMemo(() => ({ user, login, logout }), [user]);
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error("useAuth mora biti korišćen unutar <AuthProvider>.");
+  }
+  return ctx;
 }
