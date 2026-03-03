@@ -21,7 +21,6 @@ export function AuthProvider({ children }) {
 
     const fullNameFromParts = [u?.firstName, u?.lastName].filter(Boolean).join(" ").trim() || "";
 
-    // Normalizacija (da ne puca ako backend vrati drugačija polja)
     const normalized = {
       id: u?.id ?? u?.userId ?? u?.user?.id ?? null,
       email: u?.email ?? u?.username ?? email,
@@ -48,8 +47,6 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth mora biti korišćen unutar <AuthProvider>.");
-  }
+  if (!ctx) throw new Error("useAuth mora biti korišćen unutar <AuthProvider>.");
   return ctx;
 }
