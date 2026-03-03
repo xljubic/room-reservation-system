@@ -3,8 +3,6 @@ import { useAuth } from "../auth/AuthContext.jsx";
 import { apiCreateGroupReservation, apiGetRooms, apiGetSchedule } from "../api/api.js";
 import ScheduleGrid from "../components/ScheduleGrid.jsx";
 
-// Ako ti već imaš ove util fajlove u projektu, zadrži import kao što ti je bilo pre.
-// Ako nemaš, ostavi kako ti trenutno radi. (Ovaj fajl neće menjati tvoje util-e.)
 import { toDateInputValue, timeToMinutes } from "../utils/time.js";
 import { extractErrorMessage } from "../utils/errors.js";
 import { computeFreeRoomsForRange, normalizeSchedule } from "../utils/schedule.js";
@@ -26,10 +24,10 @@ export default function CreateReservationPage() {
 
   const [loading, setLoading] = useState(false);
 
-  // ✅ poruke za submit (hoćeš da stoje kod dugmeta)
   const [formErr, setFormErr] = useState("");
   const [formOk, setFormOk] = useState("");
 
+  // ✅ normalizacija za util (da ne puca kad menjaš OD/DO)
   const scheduleItems = useMemo(() => normalizeSchedule(scheduleRaw), [scheduleRaw]);
 
   const loadBase = async () => {
@@ -57,9 +55,15 @@ export default function CreateReservationPage() {
     setFormOk("");
   }, [from, to]);
 
+  // ✅ FREE ROOMS (sa try/catch da NIKAD ne sruši ekran)
   const freeRooms = useMemo(() => {
     if (!from || !to) return [];
-    return computeFreeRoomsForRange(rooms, scheduleItems, from, to);
+    try {
+      return computeFreeRoomsForRange(rooms, scheduleItems, from, to);
+    } catch (e) {
+      console.error("computeFreeRoomsForRange failed:", e);
+      return [];
+    }
   }, [from, to, rooms, scheduleItems]);
 
   const toggleRoom = (roomId) => {
@@ -120,9 +124,7 @@ export default function CreateReservationPage() {
     try {
       await apiCreateGroupReservation(payload);
       setFormOk("Rezervacija je uspešno kreirana.");
-
       await loadBase();
-
       setSelectedRoomIds(new Set());
       setDescByRoomId({});
     } catch (ex) {
@@ -132,7 +134,9 @@ export default function CreateReservationPage() {
     }
   };
 
-  // ✅ bitno: boxSizing da inputi nikad ne “pobegnu” iz ekrana
+  // ✅ OGRANIČI širinu forme (da ne bude kao pista)
+  const formWidth = "min(560px, 100%)";
+
   const inputStyle = {
     width: "100%",
     maxWidth: "100%",
@@ -142,7 +146,8 @@ export default function CreateReservationPage() {
   };
 
   return (
-    <div style={{ display: "grid", gap: 14, maxWidth: "100%" }}>
+    // ✅ ISTI OSEĆAJ ŠIRINE KAO POČETNA (ne diram druge stranice)
+    <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gap: 14 }}>
       <h2 style={{ margin: 0 }}>Napravi rezervaciju</h2>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
@@ -195,26 +200,23 @@ export default function CreateReservationPage() {
         Radno vreme: 08:00–20:00. Grid prikazuje APPROVED (crveno) i PENDING (žuto) kao blokirano.
       </div>
 
-      {/* ✅ KLJUČNA IZMENA: grid u svom wrapper-u (kao na početnoj) da NE širi stranicu */}
+      {/* ✅ Grid kao na početnoj: ne širi stranicu, ima horizontal scroll */}
       <div
         style={{
-          maxWidth: "100%",
-          overflowX: "auto",
           borderRadius: 12,
           border: "1px solid rgba(255,255,255,0.10)",
+          overflowX: "auto",
+          maxWidth: "100%",
         }}
       >
-        <ScheduleGrid
-          rooms={rooms}
-          scheduleItems={scheduleItems}
-          highlightSelection={highlightSelection}
-        />
+        {/* ✅ Grid očekuje scheduleRaw (kao na početnoj) */}
+        <ScheduleGrid rooms={rooms} scheduleRaw={scheduleRaw} highlightSelection={highlightSelection} />
       </div>
 
-      <div style={{ display: "grid", gap: 10, maxWidth: "100%" }}>
-        <h3 style={{ margin: "6px 0 0 0" }}>Kreiranje rezervacije (grupa)</h3>
+      <div style={{ display: "grid", gap: 12, marginTop: 6 }}>
+        <h3 style={{ margin: 0 }}>Kreiranje rezervacije (grupa)</h3>
 
-        <div style={{ display: "grid", gap: 6, maxWidth: "100%" }}>
+        <div style={{ width: formWidth, display: "grid", gap: 6 }}>
           <label>Naziv</label>
           <input
             value={name}
@@ -224,13 +226,9 @@ export default function CreateReservationPage() {
           />
         </div>
 
-        <div style={{ display: "grid", gap: 6, maxWidth: "100%" }}>
+        <div style={{ width: formWidth, display: "grid", gap: 6 }}>
           <label>Svrha</label>
-          <select
-            value={purpose}
-            onChange={(e) => setPurpose(e.target.value)}
-            style={{ ...inputStyle, padding: "10px 12px" }}
-          >
+          <select value={purpose} onChange={(e) => setPurpose(e.target.value)} style={inputStyle}>
             <option value="VEZBE">VEZBE</option>
             <option value="ISPIT">ISPIT</option>
             <option value="PREDAVANJE">PREDAVANJE</option>
@@ -248,82 +246,76 @@ export default function CreateReservationPage() {
               Slobodne sale za {dateStr} ({from}–{to}):
             </div>
 
-            {freeRooms.length === 0 ? (
-              <div>Nema slobodnih sala u izabranom terminu.</div>
-            ) : (
-              <div
-                style={{
-                  maxHeight: 260,
-                  overflowY: "auto",
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  borderRadius: 12,
-                  padding: 10,
-                  maxWidth: "100%",
-                  boxSizing: "border-box",
-                }}
-              >
-                <div style={{ display: "grid", gap: 10 }}>
-                  {freeRooms.map((r) => {
-                    const checked = selectedRoomIds.has(r.id);
-                    return (
-                      <div
-                        key={r.id}
-                        style={{
-                          display: "grid",
-                          gap: 6,
-                          padding: "10px 10px",
-                          borderRadius: 12,
-                          border: "1px solid rgba(255,255,255,0.08)",
-                          maxWidth: "100%",
-                          boxSizing: "border-box",
-                        }}
-                      >
-                        <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => toggleRoom(r.id)}
-                          />
-                          <span style={{ fontWeight: 700 }}>
-                            {r.code || r.name || `Sala #${r.id}`}
-                          </span>
-                        </label>
+            <div
+              style={{
+                maxHeight: 260,
+                overflowY: "auto",
+                border: "1px solid rgba(255,255,255,0.10)",
+                borderRadius: 12,
+                padding: 10,
+                width: "min(900px, 100%)",
+              }}
+            >
+              <div style={{ display: "grid", gap: 10 }}>
+                {freeRooms.map((r) => {
+                  const checked = selectedRoomIds.has(r.id);
+                  return (
+                    <div
+                      key={r.id}
+                      style={{
+                        display: "grid",
+                        gap: 6,
+                        padding: "10px 10px",
+                        borderRadius: 12,
+                        border: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
+                      <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <input type="checkbox" checked={checked} onChange={() => toggleRoom(r.id)} />
+                        <span style={{ fontWeight: 700 }}>
+                          {r.code || r.name || `Sala #${r.id}`}
+                        </span>
+                      </label>
 
-                        <div style={{ display: "grid", gap: 6 }}>
-                          <label style={{ opacity: 0.85 }}>Opis (opciono)</label>
-                          <input
-                            value={descByRoomId[r.id] || ""}
-                            onChange={(e) =>
-                              setDescByRoomId((p) => ({ ...p, [r.id]: e.target.value }))
-                            }
-                            style={inputStyle}
-                          />
-                        </div>
+                      <div style={{ display: "grid", gap: 6, width: formWidth }}>
+                        <label style={{ opacity: 0.85 }}>Opis (opciono)</label>
+                        <input
+                          value={descByRoomId[r.id] || ""}
+                          onChange={(e) =>
+                            setDescByRoomId((p) => ({ ...p, [r.id]: e.target.value }))
+                          }
+                          style={inputStyle}
+                        />
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
           </div>
         )}
 
-        {/* ✅ poruka IDE IZNAD dugmeta (kako si tražio) */}
-        {formErr ? <div style={{ color: "#ff6b6b" }}>{formErr}</div> : null}
-        {formOk ? <div style={{ color: "#7CFF7C" }}>{formOk}</div> : null}
+        {/* ✅ Poruka IZNAD dugmeta */}
+        <div style={{ width: formWidth }}>
+          {formErr ? <div style={{ color: "#ff6b6b", marginBottom: 8 }}>{formErr}</div> : null}
+          {formOk ? <div style={{ color: "#7CFF7C", marginBottom: 8 }}>{formOk}</div> : null}
 
-        <button
-          onClick={onSubmit}
-          disabled={loading}
-          style={{
-            padding: "12px 16px",
-            borderRadius: 12,
-            cursor: "pointer",
-            fontWeight: 800,
-          }}
-        >
-          {loading ? "..." : "Kreiraj rezervaciju"}
-        </button>
+          {/* ✅ Dugme normalne širine (ne ceo ekran) */}
+          <button
+            onClick={onSubmit}
+            disabled={loading}
+            style={{
+              padding: "12px 16px",
+              borderRadius: 12,
+              cursor: "pointer",
+              fontWeight: 800,
+              width: "fit-content",
+              minWidth: 220,
+            }}
+          >
+            {loading ? "..." : "Kreiraj rezervaciju"}
+          </button>
+        </div>
       </div>
     </div>
   );
