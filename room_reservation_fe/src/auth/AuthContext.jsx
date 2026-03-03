@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import { apiLogin } from "../api/api.js";
 
 const AuthContext = createContext(null);
+
 const LS_KEY = "rrs_user";
 
 export function AuthProvider({ children }) {
@@ -19,17 +20,12 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const u = await apiLogin(email, password);
 
-    const fullNameFromParts =
-      [u?.firstName, u?.lastName].filter(Boolean).join(" ").trim() || "";
-
-    // normalize response fields (so frontend doesn't crash if backend differs)
+    // Normalizacija, da ne puca ako backend vrati drugačija polja.
     const normalized = {
       id: u?.id ?? u?.userId ?? u?.user?.id ?? null,
       email: u?.email ?? u?.username ?? email,
       role: u?.role ?? u?.userRole ?? u?.user?.role ?? "USER",
-      fullName: u?.fullName ?? u?.name ?? fullNameFromParts,
-      firstName: u?.firstName ?? "",
-      lastName: u?.lastName ?? "",
+      fullName: u?.fullName ?? u?.name ?? "",
     };
 
     setUser(normalized);
@@ -48,7 +44,5 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>.");
-  return ctx;
+  return useContext(AuthContext);
 }

@@ -1,17 +1,16 @@
 import axios from "axios";
 
-// Ako koristiš proxy u vite.config.js, ostavi "/api".
-// Ako ne koristiš proxy, stavi "http://localhost:8080/api".
-// Ja ostavljam /api da radi sa proxy-jem.
 const API_BASE = "/api";
 
-const http = axios.create({
+const client = axios.create({
   baseURL: API_BASE,
-  headers: { "Content-Type": "application/json" },
-  withCredentials: true,
+  timeout: 20000,
 });
 
-// ---------- helpers ----------
+function safeData(res) {
+  return res?.data;
+}
+
 export function extractApiErrorMessage(err, fallback = "Greška") {
   return (
     err?.response?.data?.message ||
@@ -22,168 +21,96 @@ export function extractApiErrorMessage(err, fallback = "Greška") {
   );
 }
 
-async function tryPost(urls, body, config) {
-  let lastErr = null;
-  for (const u of urls) {
-    try {
-      const res = await http.post(u, body, config);
-      return res.data;
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-  throw lastErr;
-}
-
-async function tryGet(urls, config) {
-  let lastErr = null;
-  for (const u of urls) {
-    try {
-      const res = await http.get(u, config);
-      return res.data;
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-  throw lastErr;
-}
-
-async function tryPut(urls, body, config) {
-  let lastErr = null;
-  for (const u of urls) {
-    try {
-      const res = await http.put(u, body, config);
-      return res.data;
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-  throw lastErr;
-}
-
-// ---------- AUTH ----------
+/**
+ * LOGIN
+ * POST /api/auth/login { email, password }
+ */
 export async function apiLogin(email, password) {
-  // tvoje ranije rute su bile tipa /auth/login
-  return tryPost(
-    ["/auth/login", "/login", "/api/auth/login"], // fallback
-    { email, password }
-  );
-}
-
-export async function apiChangePassword({ userId, oldPassword, newPassword }) {
-  // ti si dodao hash/change-pass funkcionalnost - evo fallback ruta
-  return tryPut(
-    [
-      `/users/${userId}/password`,
-      `/users/${userId}/change-password`,
-      `/auth/change-password`,
-      `/users/change-password`,
-    ],
-    { oldPassword, newPassword }
-  );
-}
-
-// ---------- ROOMS / SCHEDULE ----------
-export async function apiGetRooms() {
-  return tryGet(["/rooms", "/room", "/rooms/all"]);
+  const res = await client.post("/auth/login", { email, password });
+  return safeData(res);
 }
 
 /**
- * Očekujem da tvoj UI šalje roomId + datum ili opseg.
- * Ako ti stranice već šalju objekat, ostavi ovako.
+ * Rooms list
+ * GET /api/rooms
  */
-export async function apiGetSchedule(params) {
-  // najčešće: GET /reservations/schedule?roomId=...&date=...
-  // ili POST /reservations/schedule
-  if (!params) return tryGet(["/reservations/schedule", "/schedule"]);
-
-  // ako je objekt, probaj GET sa query
-  if (typeof params === "object") {
-    return tryGet(
-      [
-        { url: "/reservations/schedule", params },
-        { url: "/schedule", params },
-      ].map((x) => x),
-      null
-    );
-  }
-
-  // fallback
-  return tryGet(["/reservations/schedule", "/schedule"]);
+export async function apiGetRooms() {
+  const res = await client.get("/rooms");
+  return safeData(res) || [];
 }
 
-// malo pametniji tryGet za axios config objekat
-async function tryGet(urls, config) {
-  let lastErr = null;
-  for (const entry of urls) {
-    try {
-      if (typeof entry === "string") {
-        const res = await http.get(entry, config || undefined);
-        return res.data;
-      } else {
-        const res = await http.get(entry.url, { params: entry.params });
-        return res.data;
-      }
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-  throw lastErr;
+/**
+ * Schedule za datum (Approved + Pending)
+ * GET /api/reservations/schedule?date=YYYY-MM-DD
+ */
+export async function apiGetSchedule(dateStr) {
+  const res = await client.get(`/reservations/schedule`, { params: { date: dateStr } });
+  return safeData(res);
 }
 
-// ---------- RESERVATIONS ----------
-export async function apiGetMyReservations() {
-  return tryGet([
-    "/reservations/my",
-    "/reservations/mine",
-    "/reservation/my",
-    "/reservation/mine",
-  ]);
+/**
+ * My reservations
+ * GET /api/reservations/my?userId=...
+ */
+export async function apiGetMyReservations(userId) {
+  const res = await client.get(`/reservations/my`, { params: { userId } });
+  return safeData(res) || [];
 }
 
-export async function apiCancelReservation(reservationId) {
-  // nekad je DELETE, nekad PUT /cancel
-  // probam PUT cancel, pa DELETE
-  try {
-    return await tryPut(
-      [
-        `/reservations/${reservationId}/cancel`,
-        `/reservation/${reservationId}/cancel`,
-      ],
-      {}
-    );
-  } catch (e) {
-    // fallback DELETE
-    const res = await http.delete(`/reservations/${reservationId}`);
-    return res.data;
-  }
+/**
+ * Cancel reservation item
+ * POST /api/reservations/{id}/cancel
+ * Body: { userId }
+ */
+export async function apiCancelReservation(reservationId, userId) {
+  const res = await client.post(`/reservations/${reservationId}/cancel`, { userId });
+  return safeData(res);
 }
 
-// ---------- GROUP RESERVATIONS / APPROVAL ----------
-export async function apiCreateGroupReservation(payload) {
-  // payload: šta već šalješ iz CreateReservationPage
-  return tryPost(
-    ["/reservations/group", "/group-reservations", "/reservations/create-group"],
-    payload
-  );
-}
-
+/**
+ * Pending groups (admin)
+ * GET /api/reservations/pending-groups
+ */
 export async function apiGetPendingGroups() {
-  return tryGet([
-    "/reservations/group/pending",
-    "/group-reservations/pending",
-    "/reservations/pending-groups",
-  ]);
+  const res = await client.get(`/reservations/pending-groups`);
+  return safeData(res) || [];
 }
 
-export async function apiDecideGroup(groupId, decisionPayload) {
-  // decisionPayload npr { approved: true/false } ili { decision: "APPROVE" }
-  return tryPut(
-    [
-      `/reservations/group/${groupId}/decision`,
-      `/group-reservations/${groupId}/decision`,
-      `/reservations/group/${groupId}`,
-    ],
-    decisionPayload || {}
-  );
+/**
+ * Approve/Reject pending group (admin)
+ * POST /api/reservations/group/{groupId}/decide
+ * Body: { adminId, decision: "APPROVED"|"REJECTED", comment }
+ */
+export async function apiDecideGroup(groupId, adminId, decision, comment) {
+  const res = await client.post(`/reservations/group/${groupId}/decide`, {
+    adminId,
+    decision,
+    comment: comment || "",
+  });
+  return safeData(res);
+}
+
+/**
+ * Create group reservation
+ * POST /api/reservations
+ */
+export async function apiCreateGroupReservation(payload) {
+  const res = await client.post(`/reservations`, payload);
+  return safeData(res);
+}
+
+/**
+ * CHANGE PASSWORD (novo)
+ * Najčešće: PUT /api/auth/change-password
+ * Body: { userId, oldPassword, newPassword }
+ *
+ * Ako ti backend ruta nije ova – promeni samo string "/auth/change-password".
+ */
+export async function apiChangePassword({ userId, oldPassword, newPassword }) {
+  const res = await client.put(`/auth/change-password`, {
+    userId,
+    oldPassword,
+    newPassword,
+  });
+  return safeData(res);
 }

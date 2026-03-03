@@ -1,61 +1,91 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
+
+const linkStyle = ({ isActive }) => ({
+  padding: "8px 12px",
+  borderRadius: "8px",
+  textDecoration: "none",
+  color: "white",
+  background: isActive ? "rgba(255,255,255,0.12)" : "transparent",
+});
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const loc = useLocation();
+  const navigate = useNavigate();
 
-  const btnStyle = (path) => ({
-    padding: "8px 12px",
-    borderRadius: 10,
-    border: "1px solid rgba(255,255,255,0.15)",
-    background: loc.pathname === path ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.0)",
-    color: "white",
-    textDecoration: "none",
-    display: "inline-block",
-  });
-
-  const rightBtn = {
-    padding: "8px 12px",
-    borderRadius: 10,
-    border: "1px solid rgba(255,255,255,0.15)",
-    background: "rgba(255,255,255,0.10)",
-    color: "white",
-    cursor: "pointer",
+  const onLogout = () => {
+    logout();
+    navigate("/login");
   };
-
-  const fullName = user?.fullName || [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email;
 
   return (
     <div
       style={{
-        padding: "12px 16px",
         display: "flex",
-        gap: 10,
         alignItems: "center",
         justifyContent: "space-between",
-        background: "#0f172a",
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
+        gap: 12,
+        padding: "12px 16px",
+        background: "#000",
+        borderBottom: "1px solid rgba(255,255,255,0.12)",
+        color: "white",
       }}
     >
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-        <Link to="/" style={btnStyle("/")}>Početna</Link>
-        <Link to="/create" style={btnStyle("/create")}>Napravi rezervaciju</Link>
-        <Link to="/mine" style={btnStyle("/mine")}>Moje rezervacije</Link>
-        {user?.role === "ADMIN" && <Link to="/pending" style={btnStyle("/pending")}>Pending rezervacije</Link>}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ fontWeight: 700, marginRight: 10 }}>Room Reservation</div>
+
+        <NavLink to="/" style={linkStyle}>
+          Početna
+        </NavLink>
+
+        <NavLink to="/create" style={linkStyle}>
+          Napravi rezervaciju
+        </NavLink>
+
+        <NavLink to="/mine" style={linkStyle}>
+          Moje rezervacije
+        </NavLink>
+
+        {user?.role === "ADMIN" && (
+          <NavLink to="/pending" style={linkStyle}>
+            Pending rezervacije
+          </NavLink>
+        )}
       </div>
 
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-        <div style={{ color: "white", opacity: 0.95, fontSize: 14 }}>
-          Ulogovan: <b>{fullName}</b> ({user?.role || "USER"})
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ opacity: 0.95 }}>
+          Ulogovan: <b>{user?.email}</b> ({user?.role})
         </div>
 
-        <Link to="/profile" style={rightBtn}>Moj Profil</Link>
+        <button
+          onClick={() => navigate("/profile")}
+          style={{
+            padding: "8px 12px",
+            borderRadius: "10px",
+            border: "1px solid rgba(255,255,255,0.18)",
+            background: "rgba(255,255,255,0.08)",
+            color: "white",
+            cursor: "pointer",
+          }}
+        >
+          Moj Profil
+        </button>
 
-        <button onClick={logout} style={rightBtn}>Logout</button>
+        <button
+          onClick={onLogout}
+          style={{
+            padding: "8px 12px",
+            borderRadius: "10px",
+            border: "1px solid rgba(255,255,255,0.18)",
+            background: "rgba(255,255,255,0.08)",
+            color: "white",
+            cursor: "pointer",
+          }}
+        >
+          Logout
+        </button>
       </div>
     </div>
   );
