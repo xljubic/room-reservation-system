@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../auth/AuthContext.jsx";
 import { apiDecideGroup, apiGetPendingGroups } from "../api/api.js";
+import { extractErrorMessage } from "../utils/errors.js";
+import { formatDateDDMMYYYY, formatTimeHHMM } from "../utils/time.js";
 import StatusBadge from "../components/StatusBadge.jsx";
 
 function toUpper(s) {
@@ -7,6 +10,8 @@ function toUpper(s) {
 }
 
 export default function PendingReservationsPage() {
+  const { user } = useAuth();
+
   const [pendingGroups, setPendingGroups] = useState([]);
   const [commentByGroupId, setCommentByGroupId] = useState({});
   const [loading, setLoading] = useState(false);
@@ -19,7 +24,7 @@ export default function PendingReservationsPage() {
       const data = await apiGetPendingGroups();
       setPendingGroups(Array.isArray(data) ? data : []);
     } catch (ex) {
-      setErr(ex?.response?.data?.message || ex?.message || "Greška pri učitavanju pending rezervacija.");
+      setErr(extractErrorMessage(ex, "Greška pri učitavanju pending rezervacija."));
     } finally {
       setLoading(false);
     }
@@ -35,128 +40,113 @@ export default function PendingReservationsPage() {
     list.sort((a, b) => {
       const ca = a.createdAt || a.created_at || "";
       const cb = b.createdAt || b.created_at || "";
-      if (ca && cb && ca !== cb) return String(ca).localeCompare(String(cb));
-      const ia = Number(a.id || 0);
-      const ib = Number(b.id || 0);
-      return ia - ib;
+      return String(ca).localeCompare(String(cb));
     });
     return list;
   }, [pendingGroups]);
 
-  const decide = async (groupId, decision) => {
+  const decide = async (groupId, decisionEnum) => {
     setErr("");
     setLoading(true);
     try {
       const comment = commentByGroupId[groupId] || "";
-      await apiDecideGroup(groupId, decision, comment);
+      await apiDecideGroup(groupId, user?.id, decisionEnum, comment);
       await load();
       setCommentByGroupId((p) => ({ ...p, [groupId]: "" }));
     } catch (ex) {
-      setErr(ex?.response?.data?.message || ex?.message || "Greška pri approve/reject.");
+      setErr(extractErrorMessage(ex, "Greška pri approve/reject."));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ display: "grid", gap: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-        <h2>Pending rezervacije</h2>
-        <button onClick={load} disabled={loading} style={{ padding: "8px 12px", borderRadius: 10 }}>
-          Osveži
-        </button>
-      </div>
+    <div style={{ padding: 24 }}>
+      <h2>Pending rezervacije</h2>
 
-      {err && <div style={{ color: "#ff6b6b" }}>{err}</div>}
+      <button onClick={load} disabled={loading} style={{ padding: "10px 14px", borderRadius: 10 }}>
+        Osveži
+      </button>
 
-      <div style={{ display: "grid", gap: 12 }}>
+      {err && <div style={{ color: "#ff6b6b", marginTop: 10 }}>{err}</div>}
+
+      <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
         {sorted.length === 0 ? (
-          <div style={{ opacity: 0.85 }}>Nema pending rezervacija.</div>
+          <div>Nema pending rezervacija.</div>
         ) : (
           sorted.map((g) => {
-            const items = g.items || g.reservations || g.reservationItems || [];
+            const groupId = g.groupId || g.id; // BITNO: backend daje groupId :contentReference[oaicite:13]{index=13}
+            const items = Array.isArray(g.items) ? g.items : [];
             const status = toUpper(g.status || "PENDING");
+
+            const first = items[0];
+            const dateLabel = first?.startDateTime ? formatDateDDMMYYYY(first.startDateTime) : "";
+            const fromLabel = first?.startDateTime ? formatTimeHHMM(first.startDateTime) : "";
+            const toLabel = first?.endDateTime ? formatTimeHHMM(first.endDateTime) : "";
 
             return (
               <div
-                key={g.id}
+                key={groupId}
                 style={{
-                  border: "1px solid rgba(255,255,255,0.12)",
+                  border: "1px solid rgba(255,255,255,0.10)",
                   borderRadius: 12,
                   padding: 12,
-                  background: "rgba(255,255,255,0.03)",
-                  display: "grid",
-                  gap: 10,
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                    <b>{g.name || g.groupName || `Grupa ${g.id}`}</b>
-                    {g.purpose && <span style={{ opacity: 0.9 }}>{g.purpose}</span>}
-                    {g.createdByEmail && <span style={{ opacity: 0.85 }}>by {g.createdByEmail}</span>}
-                    <StatusBadge status={status} />
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <div style={{ fontWeight: 800 }}>
+                    {g.name} {g.purpose ? `(${g.purpose})` : ""}{" "}
+                    {g.createdByEmail ? <span style={{ opacity: 0.75 }}>by {g.createdByEmail}</span> : null}
                   </div>
-                  <div style={{ opacity: 0.85, fontSize: 13 }}>
-                    Kreirano: {g.createdAt || g.created_at || "—"}
-                  </div>
+                  <StatusBadge status={status} />
                 </div>
 
-                <div style={{ opacity: 0.95 }}>
-                  {g.date && (
-                    <div>
-                      <b>Datum:</b> {g.date}{" "}
-                      {g.timeFrom && g.timeTo ? (
-                        <>
-                          <b>Vreme:</b> {g.timeFrom}–{g.timeTo}
-                        </>
-                      ) : null}
-                    </div>
-                  )}
+                <div style={{ opacity: 0.8, marginTop: 6 }}>
+                  Kreirano: {g.createdAt ? `${formatDateDDMMYYYY(g.createdAt)} ${formatTimeHHMM(g.createdAt)}` : "—"}
                 </div>
 
-                {Array.isArray(items) && items.length > 0 && (
-                  <div style={{ display: "grid", gap: 6 }}>
-                    {items.map((it) => {
-                      const label = it.roomCode || it.roomName || it.room?.code || it.room?.name || it.roomId;
-                      const start = it.startTime || it.timeFrom || it.from || g.timeFrom;
-                      const end = it.endTime || it.timeTo || it.to || g.timeTo;
-                      return (
-                        <div
-                          key={it.id || `${label}_${start}_${end}`}
-                          style={{ padding: "6px 10px", borderRadius: 10, background: "rgba(0,0,0,0.20)" }}
-                        >
-                          <b>{label}</b> — {start}–{end} {it.description ? ` | ${it.description}` : ""}
-                        </div>
-                      );
-                    })}
+                {dateLabel && (
+                  <div style={{ marginTop: 6, opacity: 0.9 }}>
+                    Datum: <b>{dateLabel}</b> | Vreme: <b>{fromLabel}–{toLabel}</b>
                   </div>
                 )}
 
-                <div style={{ display: "grid", gap: 8 }}>
-                  <label>Komentar (opciono) – za ovu rezervaciju:</label>
+                {items.length > 0 && (
+                  <div style={{ marginTop: 10, display: "grid", gap: 6 }}>
+                    {items.map((it) => (
+                      <div key={it.id}>
+                        <b>{it.roomCode}</b> — {formatTimeHHMM(it.startDateTime)}–{formatTimeHHMM(it.endDateTime)}
+                        {it.description ? ` | Opis: ${it.description}` : ""}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div style={{ marginTop: 12 }}>
+                  <div style={{ marginBottom: 6 }}>Komentar (opciono) – za ovu rezervaciju:</div>
                   <input
-                    value={commentByGroupId[g.id] || ""}
-                    onChange={(e) => setCommentByGroupId((p) => ({ ...p, [g.id]: e.target.value }))}
+                    value={commentByGroupId[groupId] || ""}
+                    onChange={(e) => setCommentByGroupId((p) => ({ ...p, [groupId]: e.target.value }))}
                     placeholder="Upiši komentar..."
                     style={{ width: "100%" }}
                   />
+                </div>
 
-                  <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                    <button
-                      onClick={() => decide(g.id, "APPROVE")}
-                      disabled={loading}
-                      style={{ padding: "8px 12px", borderRadius: 10 }}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => decide(g.id, "REJECT")}
-                      disabled={loading}
-                      style={{ padding: "8px 12px", borderRadius: 10 }}
-                    >
-                      Reject
-                    </button>
-                  </div>
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 12 }}>
+                  <button
+                    onClick={() => decide(groupId, "APPROVED")}
+                    disabled={loading}
+                    style={{ padding: "8px 12px", borderRadius: 10 }}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => decide(groupId, "REJECTED")}
+                    disabled={loading}
+                    style={{ padding: "8px 12px", borderRadius: 10 }}
+                  >
+                    Reject
+                  </button>
                 </div>
               </div>
             );

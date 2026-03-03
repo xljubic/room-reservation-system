@@ -1,15 +1,32 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { apiCancelReservation, apiGetMyReservations } from "../api/api.js";
+import { extractErrorMessage } from "../utils/errors.js";
+import { formatDateDDMMYYYY, formatTimeHHMM } from "../utils/time.js";
 import StatusBadge from "../components/StatusBadge.jsx";
 
 function normStatus(s) {
   return String(s || "").toUpperCase();
 }
 
+function groupByGroupId(items) {
+  const map = new Map();
+  for (const it of items || []) {
+    const gid = it.groupId || `__single__${it.id}`;
+    if (!map.has(gid)) map.set(gid, []);
+    map.get(gid).push(it);
+  }
+  for (const [k, arr] of map.entries()) {
+    arr.sort((a, b) => String(a.startDateTime || "").localeCompare(String(b.startDateTime || "")));
+    map.set(k, arr);
+  }
+  return Array.from(map.entries()).map(([groupId, reservations]) => ({ groupId, reservations }));
+}
+
 export default function MyReservationsPage() {
   const { user } = useAuth();
-  const [groups, setGroups] = useState([]);
+
+  const [reservations, setReservations] = useState([]);
   const [filter, setFilter] = useState("ALL");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -19,9 +36,9 @@ export default function MyReservationsPage() {
     setLoading(true);
     try {
       const data = await apiGetMyReservations(user?.id);
-      setGroups(Array.isArray(data) ? data : []);
+      setReservations(Array.isArray(data) ? data : []);
     } catch (ex) {
-      setErr(ex?.response?.data?.message || ex?.message || "Greška pri učitavanju mojih rezervacija.");
+      setErr(extractErrorMessage(ex, "Greška pri učitavanju mojih rezervacija."));
     } finally {
       setLoading(false);
     }
@@ -32,126 +49,111 @@ export default function MyReservationsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onCancel = async (reservationId) => {
+  const grouped = useMemo(() => groupByGroupId(reservations), [reservations]);
+
+  const filtered = useMemo(() => {
+    let list = [...grouped];
+    if (filter !== "ALL") {
+      list = list.filter((g) => g.reservations.some((it) => normStatus(it.status) === filter));
+    }
+    // najnovije prvo (po createdAt max u grupi)
+    list.sort((a, b) => {
+      const ca = Math.max(...a.reservations.map((x) => Date.parse(x.createdAt || x.startDateTime || 0)));
+      const cb = Math.max(...b.reservations.map((x) => Date.parse(x.createdAt || x.startDateTime || 0)));
+      return cb - ca;
+    });
+    return list;
+  }, [grouped, filter]);
+
+  const cancelGroup = async (group) => {
     setErr("");
     setLoading(true);
     try {
-      await apiCancelReservation(reservationId);
+      // otkazi sve stavke koje nisu već CANCELED
+      const toCancel = group.reservations.filter((it) => normStatus(it.status) !== "CANCELED");
+      for (const it of toCancel) {
+        await apiCancelReservation(it.id, user?.id);
+      }
       await load();
     } catch (ex) {
-      setErr(ex?.response?.data?.message || ex?.message || "Greška pri otkazivanju.");
+      setErr(extractErrorMessage(ex, "Greška pri otkazivanju."));
     } finally {
       setLoading(false);
     }
   };
 
-  const flattened = useMemo(() => {
-    // Backend kod tebe vraća “grupe” sa stavkama – ali ponekad ljudi vrate već “items”.
-    // Pokušajmo oba:
-    const list = [];
-    for (const g of groups || []) {
-      const items = g.items || g.reservations || g.reservationItems || [];
-      if (Array.isArray(items) && items.length) {
-        for (const it of items) list.push({ group: g, item: it });
-      } else {
-        // fallback: tretiraj g kao stavku
-        list.push({ group: g, item: g });
-      }
-    }
-    return list;
-  }, [groups]);
-
-  const filtered = useMemo(() => {
-    let list = [...flattened];
-
-    if (filter !== "ALL") {
-      list = list.filter(({ item }) => normStatus(item.status) === filter);
-    }
-
-    // sort: najnovije -> najstarije (po createdAt ako postoji, fallback id desc)
-    list.sort((a, b) => {
-      const ca = a.item.createdAt || a.group.createdAt || "";
-      const cb = b.item.createdAt || b.group.createdAt || "";
-      if (ca && cb && ca !== cb) return String(cb).localeCompare(String(ca));
-      const ia = Number(a.item.id || 0);
-      const ib = Number(b.item.id || 0);
-      return ib - ia;
-    });
-
-    return list;
-  }, [flattened, filter]);
-
   return (
-    <div style={{ display: "grid", gap: 14 }}>
+    <div style={{ padding: 24 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
         <h2>Moje rezervacije</h2>
-        <button onClick={load} disabled={loading} style={{ padding: "8px 12px", borderRadius: 10 }}>
+        <button onClick={load} disabled={loading} style={{ padding: "10px 14px", borderRadius: 10 }}>
           Osveži
         </button>
       </div>
 
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-        <label>Filter:</label>
-        <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-          <option value="ALL">Sve</option>
-          <option value="PENDING">PENDING</option>
-          <option value="APPROVED">APPROVED</option>
-          <option value="DENIED">DENIED</option>
-          <option value="REJECTED">REJECTED</option>
-          <option value="CANCELED">CANCELED</option>
-          <option value="CANCELLED">CANCELLED</option>
-        </select>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
+        <label>
+          Filter:{" "}
+          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="ALL">Sve</option>
+            <option value="PENDING">PENDING</option>
+            <option value="APPROVED">APPROVED</option>
+            <option value="REJECTED">REJECTED</option>
+            <option value="CANCELED">CANCELED</option>
+          </select>
+        </label>
       </div>
 
-      {err && <div style={{ color: "#ff6b6b" }}>{err}</div>}
+      {err && <div style={{ color: "#ff6b6b", marginBottom: 10 }}>{err}</div>}
 
-      <div style={{ display: "grid", gap: 10 }}>
+      <div style={{ display: "grid", gap: 12 }}>
         {filtered.length === 0 ? (
-          <div style={{ opacity: 0.85 }}>Nema rezervacija za prikaz.</div>
+          <div>Nema rezervacija.</div>
         ) : (
-          filtered.map(({ group, item }) => {
-            const status = normStatus(item.status);
-            const canCancel = status === "PENDING" || status === "APPROVED";
+          filtered.map((g) => {
+            const first = g.reservations[0];
+            const status = first?.status || "";
+            const canCancel = g.reservations.some((it) => normStatus(it.status) === "PENDING" || normStatus(it.status) === "APPROVED");
 
-            const label = item.roomCode || item.roomName || item.room?.code || item.room?.name || item.roomId;
-
-            const start = item.startTime || item.timeFrom || item.from;
-            const end = item.endTime || item.timeTo || item.to;
-            const date = item.date || group.date || group.reservationDate || "";
+            const dateLabel = formatDateDDMMYYYY(first?.startDateTime);
+            const fromLabel = formatTimeHHMM(first?.startDateTime);
+            const toLabel = formatTimeHHMM(first?.endDateTime);
 
             return (
               <div
-                key={`${group.id || "g"}_${item.id || "i"}`}
+                key={g.groupId}
                 style={{
-                  padding: "10px 12px",
+                  border: "1px solid rgba(255,255,255,0.10)",
                   borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  background: "rgba(255,255,255,0.03)",
-                  display: "grid",
-                  gap: 8,
+                  padding: 12,
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                    <b>{group.name || group.groupName || "Grupa"}</b>
-                    <span style={{ opacity: 0.9 }}>
-                      {date} {start}–{end}
-                    </span>
-                    <span style={{ opacity: 0.9 }}>{label}</span>
-                    {group.purpose && <span style={{ opacity: 0.8 }}>({group.purpose})</span>}
-                    <StatusBadge status={status} />
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <div style={{ fontWeight: 800 }}>
+                    {first?.name} — {dateLabel} {fromLabel}–{toLabel}{" "}
+                    {first?.purpose ? <span style={{ opacity: 0.75 }}>({first.purpose})</span> : null}
                   </div>
+                  <StatusBadge status={status} />
+                </div>
 
+                <div style={{ marginTop: 8, display: "grid", gap: 6 }}>
+                  {g.reservations.map((it) => (
+                    <div key={it.id}>
+                      <b>{it.room?.code || it.roomCode}</b> — {formatTimeHHMM(it.startDateTime)}–{formatTimeHHMM(it.endDateTime)}
+                      {it.description ? ` | Opis: ${it.description}` : ""}
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
                   <button
-                    onClick={() => onCancel(item.id)}
-                    disabled={!canCancel || loading}
-                    style={{ padding: "8px 12px", borderRadius: 10, opacity: canCancel ? 1 : 0.45 }}
+                    onClick={() => cancelGroup(g)}
+                    disabled={loading || !canCancel}
+                    style={{ padding: "10px 14px", borderRadius: 10 }}
                   >
                     Otkaži
                   </button>
                 </div>
-
-                {item.description && <div style={{ opacity: 0.9 }}>Opis: {item.description}</div>}
               </div>
             );
           })

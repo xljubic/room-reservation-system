@@ -1,6 +1,5 @@
 import axios from "axios";
 
-// Ako koristiš Vite proxy, ostavi ovako (relativno). U suprotnom stavi npr. http://localhost:8080
 const API_BASE = "/api";
 
 const client = axios.create({
@@ -40,7 +39,7 @@ export async function apiGetSchedule(dateStr) {
 }
 
 /**
- * My reservations (grupe)
+ * My reservations
  * GET /api/reservations/my?userId=...
  */
 export async function apiGetMyReservations(userId) {
@@ -50,10 +49,12 @@ export async function apiGetMyReservations(userId) {
 
 /**
  * Cancel reservation item
- * POST /api/reservations/{reservationId}/cancel
+ * POST /api/reservations/{id}/cancel
+ * Body: { userId }
+ * Backend zahteva userId :contentReference[oaicite:10]{index=10}
  */
-export async function apiCancelReservation(reservationId) {
-  const res = await client.post(`/reservations/${reservationId}/cancel`);
+export async function apiCancelReservation(reservationId, userId) {
+  const res = await client.post(`/reservations/${reservationId}/cancel`, { userId });
   return safeData(res);
 }
 
@@ -69,10 +70,12 @@ export async function apiGetPendingGroups() {
 /**
  * Approve/Reject pending group (admin)
  * POST /api/reservations/group/{groupId}/decide
- * Body: { decision, comment }
+ * Body: { adminId, decision: "APPROVED"|"REJECTED", comment }
+ * Backend koristi DecideReservationRequest :contentReference[oaicite:11]{index=11}
  */
-export async function apiDecideGroup(groupId, decision, comment) {
+export async function apiDecideGroup(groupId, adminId, decision, comment) {
   const res = await client.post(`/reservations/group/${groupId}/decide`, {
+    adminId,
     decision,
     comment: comment || "",
   });
@@ -82,16 +85,9 @@ export async function apiDecideGroup(groupId, decision, comment) {
 /**
  * Create group reservation
  * POST /api/reservations
- *
- * DTO (GitHub):
- * CreateReservationGroupRequest:
- * {
- *   createdById,
- *   date,
- *   purpose,
- *   name,
- *   items: [{ roomId, startTime, endTime, description }]
- * }
+ * DTO: CreateReservationGroupRequest
+ * { createdById, date, purpose, name, items:[{roomId,startTime,endTime,description}] }
+ * :contentReference[oaicite:12]{index=12}
  */
 export async function apiCreateGroupReservation(payload) {
   const res = await client.post(`/reservations`, payload);
