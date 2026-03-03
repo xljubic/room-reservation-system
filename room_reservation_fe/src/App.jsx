@@ -1,4 +1,5 @@
 import React from "react";
+
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext.jsx";
 
@@ -7,6 +8,7 @@ import HomePage from "./pages/HomePage.jsx";
 import CreateReservationPage from "./pages/CreateReservationPage.jsx";
 import MyReservationsPage from "./pages/MyReservationsPage.jsx";
 import PendingReservationsPage from "./pages/PendingReservationsPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
 
 import Navbar from "./components/Navbar.jsx";
 
@@ -17,15 +19,20 @@ function ProtectedLayout() {
   return (
     <div style={{ minHeight: "100vh" }}>
       <Navbar />
+
       <div style={{ padding: "16px" }}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/create" element={<CreateReservationPage />} />
           <Route path="/mine" element={<MyReservationsPage />} />
+
           <Route
             path="/pending"
             element={user?.role === "ADMIN" ? <PendingReservationsPage /> : <Navigate to="/" replace />}
           />
+
+          <Route path="/profile" element={<ProfilePage />} />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import { useAuth } from "../auth/AuthContext.jsx";
+import { extractApiErrorMessage } from "../api/api.js";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -15,11 +17,12 @@ export default function LoginPage() {
     e.preventDefault();
     setErr("");
     setLoading(true);
+
     try {
       await login(email.trim(), password);
       navigate("/");
     } catch (ex) {
-      setErr(ex?.response?.data?.message || ex?.message || "Login nije uspeo.");
+      setErr(extractApiErrorMessage(ex, "Login nije uspeo."));
     } finally {
       setLoading(false);
     }
