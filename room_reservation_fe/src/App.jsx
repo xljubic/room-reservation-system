@@ -16,9 +16,11 @@ function ProtectedLayout() {
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#121212" }}>
+    <div style={{ minHeight: "100vh", background: "#1f1f1f" }}>
       <Navbar />
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: 16 }}>
+
+      {/* ✅ OVDE je “širina” za sve stranice */}
+      <div style={{ maxWidth: 1500, margin: "0 auto", padding: 8 }}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/create" element={<CreateReservationPage />} />
