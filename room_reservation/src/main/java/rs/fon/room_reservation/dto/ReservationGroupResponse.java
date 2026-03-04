@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import rs.fon.room_reservation.model.enums.ReservationPurpose;
 import rs.fon.room_reservation.model.enums.ReservationStatus;
+import rs.fon.room_reservation.model.enums.UserRole;
 
 /**
  *
@@ -16,8 +17,13 @@ import rs.fon.room_reservation.model.enums.ReservationStatus;
 public class ReservationGroupResponse {
 
     private String groupId;
+
     private Long createdById;
     private String createdByEmail;
+
+    //NOVO (da frontend zna da li je creator admin)
+    private UserRole createdByRole;
+
     private ReservationPurpose purpose;
     private String name;
     private ReservationStatus status;
@@ -47,6 +53,14 @@ public class ReservationGroupResponse {
 
     public void setCreatedByEmail(String createdByEmail) {
         this.createdByEmail = createdByEmail;
+    }
+
+    public UserRole getCreatedByRole() {
+        return createdByRole;
+    }
+
+    public void setCreatedByRole(UserRole createdByRole) {
+        this.createdByRole = createdByRole;
     }
 
     public ReservationPurpose getPurpose() {
