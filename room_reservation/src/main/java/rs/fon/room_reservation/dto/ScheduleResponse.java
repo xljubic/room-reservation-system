@@ -14,14 +14,18 @@ import rs.fon.room_reservation.model.entity.Room;
  */
 public class ScheduleResponse {
 
-    private String date;          // YYYY-MM-DD
-    private String dayStart;      // "08:00"
-    private String dayEnd;        // "20:00"
-    private int slotMinutes;      // 30
+    private String date; // YYYY-MM-DD
+    private String dayStart; // "08:00"
+    private String dayEnd;   // "20:00"
+    private int slotMinutes; // 30
 
     private List<Room> rooms;
+
     private List<Reservation> approvedReservations;
     private List<Reservation> pendingReservations;
+
+    // NOVO
+    private List<Reservation> rejectedReservations;
 
     public String getDate() {
         return date;
@@ -77,5 +81,13 @@ public class ScheduleResponse {
 
     public void setPendingReservations(List<Reservation> pendingReservations) {
         this.pendingReservations = pendingReservations;
+    }
+
+    public List<Reservation> getRejectedReservations() {
+        return rejectedReservations;
+    }
+
+    public void setRejectedReservations(List<Reservation> rejectedReservations) {
+        this.rejectedReservations = rejectedReservations;
     }
 }

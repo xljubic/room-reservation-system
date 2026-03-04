@@ -1,25 +1,16 @@
 import { overlaps, timeToMinutes } from "./time.js";
 
-/**
- * Backend schedule: ScheduleResponse { approvedReservations, pendingReservations, rooms... }
- * :contentReference[oaicite:8]{index=8}
- *
- * Reservation entity fields: startDateTime/endDateTime, room{ id, code }, createdBy{ email }, status, groupId...
- * :contentReference[oaicite:9]{index=9}
- */
-
 function pickTimeFromDateTime(dt) {
   if (!dt) return "";
   const s = String(dt);
-  if (s.includes("T")) return s.split("T")[1].slice(0, 5); // HH:mm
-  // fallback if already HH:mm or HH:mm:ss
+  if (s.includes("T")) return s.split("T")[1].slice(0, 5);
   return s.slice(0, 5);
 }
 
 function pickDateFromDateTime(dt) {
   if (!dt) return "";
   const s = String(dt);
-  return s.includes("T") ? s.split("T")[0] : s; // YYYY-MM-DD
+  return s.includes("T") ? s.split("T")[0] : s;
 }
 
 function normalizeReservation(r, statusOverride) {
@@ -32,9 +23,9 @@ function normalizeReservation(r, statusOverride) {
   const roomCode = r.roomCode || r.room?.code || r.room?.name || "";
 
   const createdByEmail = r.createdByEmail || r.createdBy?.email || "";
+  const createdByRole = r.createdByRole || r.createdBy?.role || "";
 
   return {
-    // keep originals if needed
     ...r,
     id: r.id,
     roomId,
@@ -45,6 +36,7 @@ function normalizeReservation(r, statusOverride) {
     endTime: pickTimeFromDateTime(endDT),
     date: r.date || pickDateFromDateTime(startDT),
     createdByEmail,
+    createdByRole,
     status: statusOverride || r.status || r.reservationStatus || r.state || "",
     groupId: r.groupId || r.group_id || null,
     purpose: r.purpose,
@@ -57,23 +49,24 @@ function normalizeReservation(r, statusOverride) {
 export function normalizeSchedule(raw) {
   if (!raw) return [];
 
-  // If backend already returns array
   if (Array.isArray(raw)) {
     return raw.map((x) => normalizeReservation(x) || x).filter(Boolean);
   }
 
-  // ScheduleResponse: merge approved + pending
   const approved = Array.isArray(raw.approvedReservations) ? raw.approvedReservations : [];
   const pending = Array.isArray(raw.pendingReservations) ? raw.pendingReservations : [];
 
-  if (approved.length || pending.length) {
+  // NOVO
+  const rejected = Array.isArray(raw.rejectedReservations) ? raw.rejectedReservations : [];
+
+  if (approved.length || pending.length || rejected.length) {
     return [
       ...approved.map((r) => normalizeReservation(r, "APPROVED")).filter(Boolean),
       ...pending.map((r) => normalizeReservation(r, "PENDING")).filter(Boolean),
+      ...rejected.map((r) => normalizeReservation(r, "REJECTED")).filter(Boolean),
     ];
   }
 
-  // generic fallback
   const arr = raw.items || raw.reservations || raw.data || [];
   return Array.isArray(arr) ? arr.map((x) => normalizeReservation(x) || x).filter(Boolean) : [];
 }
@@ -94,7 +87,6 @@ export function getRoomId(item) {
 }
 
 export function getTimes(item) {
-  // Prefer normalized HH:mm fields
   const start =
     item.startTime ||
     item.timeFrom ||
@@ -117,7 +109,6 @@ export function getStatus(item) {
 
 export function isBlockedStatus(status) {
   const st = String(status || "").toUpperCase();
-  // grid blokira APPROVED i PENDING
   return st === "APPROVED" || st === "PENDING";
 }
 
@@ -130,8 +121,10 @@ export function computeFreeRoomsForRange(allRooms, scheduleItems, fromHHmm, toHH
   for (const it of scheduleItems) {
     const status = getStatus(it);
     if (!isBlockedStatus(status)) continue;
+
     const roomId = getRoomId(it);
     if (!roomId) continue;
+
     const { start, end } = getTimes(it);
     if (!start || !end) continue;
 

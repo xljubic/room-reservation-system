@@ -182,15 +182,21 @@ public class ReservationController {
     @PostMapping("/{id}/cancel")
     public ResponseEntity<?> cancel(@PathVariable Long id, @RequestBody CancelReservationRequest req) {
         Reservation r = reservationRepository.findById(id).orElse(null);
-        if (r == null) return ResponseEntity.notFound().build();
+        if (r == null) {
+            return ResponseEntity.notFound().build();
+        }
 
-        if (req.getUserId() == null) return ResponseEntity.badRequest().body("Missing userId.");
+        if (req.getUserId() == null) {
+            return ResponseEntity.badRequest().body("Missing userId.");
+        }
 
         if (!r.getCreatedBy().getId().equals(req.getUserId())) {
             return ResponseEntity.status(403).body("You can cancel only your reservations.");
         }
 
-        if (r.getStatus() == ReservationStatus.CANCELED) return ResponseEntity.ok(r);
+        if (r.getStatus() == ReservationStatus.CANCELED) {
+            return ResponseEntity.ok(r);
+        }
 
         r.setStatus(ReservationStatus.CANCELED);
         return ResponseEntity.ok(reservationRepository.save(r));
@@ -206,21 +212,29 @@ public class ReservationController {
     @PostMapping("/{id}/decide")
     public ResponseEntity<?> decide(@PathVariable Long id, @RequestBody DecideReservationRequest req) {
         Reservation r = reservationRepository.findById(id).orElse(null);
-        if (r == null) return ResponseEntity.notFound().build();
+        if (r == null) {
+            return ResponseEntity.notFound().build();
+        }
 
         if (req.getAdminId() == null || req.getDecision() == null) {
             return ResponseEntity.badRequest().body("Missing adminId or decision.");
         }
 
         User admin = userRepository.findById(req.getAdminId()).orElse(null);
-        if (admin == null) return ResponseEntity.badRequest().body("Admin user not found.");
-        if (admin.getRole() != UserRole.ADMIN) return ResponseEntity.status(403).body("User is not ADMIN.");
+        if (admin == null) {
+            return ResponseEntity.badRequest().body("Admin user not found.");
+        }
+        if (admin.getRole() != UserRole.ADMIN) {
+            return ResponseEntity.status(403).body("User is not ADMIN.");
+        }
 
         if (req.getDecision() == ApprovalDecision.APPROVED) {
             boolean hasOverlap = !reservationRepository
                     .findOverlaps(r.getRoom().getId(), ReservationStatus.APPROVED, r.getStartDateTime(), r.getEndDateTime())
                     .isEmpty();
-            if (hasOverlap) return ResponseEntity.badRequest().body("Cannot approve: room overlaps with an already approved reservation.");
+            if (hasOverlap) {
+                return ResponseEntity.badRequest().body("Cannot approve: room overlaps with an already approved reservation.");
+            }
 
             r.setStatus(ReservationStatus.APPROVED);
         } else {
@@ -244,13 +258,21 @@ public class ReservationController {
     @GetMapping("/schedule")
     public ScheduleResponse schedule(@RequestParam String date) {
         var rooms = roomRepository.findAll();
-
         LocalDate d = LocalDate.parse(date);
         LocalDateTime from = d.atStartOfDay();
         LocalDateTime to = d.plusDays(1).atStartOfDay();
 
-        var approved = reservationRepository.findByStatusOverlappingRange(ReservationStatus.APPROVED, from, to);
-        var pending = reservationRepository.findByStatusOverlappingRange(ReservationStatus.PENDING, from, to);
+        var approved = reservationRepository.findByStatusOverlappingRange(
+                ReservationStatus.APPROVED, from, to
+        );
+        var pending = reservationRepository.findByStatusOverlappingRange(
+                ReservationStatus.PENDING, from, to
+        );
+
+        // NOVO
+        var rejected = reservationRepository.findByStatusOverlappingRange(
+                ReservationStatus.REJECTED, from, to
+        );
 
         ScheduleResponse resp = new ScheduleResponse();
         resp.setDate(date);
@@ -261,14 +283,17 @@ public class ReservationController {
         resp.setApprovedReservations(approved);
         resp.setPendingReservations(pending);
 
+        // NOVO
+        resp.setRejectedReservations(rejected);
+
         return resp;
     }
 
     @Operation(summary = "Admin: lista PENDING rezervacija grupisano po groupId")
     @GetMapping("/pending-groups")
     public List<ReservationGroupResponse> pendingGroups() {
-        List<Reservation> pendingItems =
-                reservationRepository.findByStatusAndGroupIdIsNotNullOrderByCreatedAtAsc(ReservationStatus.PENDING);
+        List<Reservation> pendingItems
+                = reservationRepository.findByStatusAndGroupIdIsNotNullOrderByCreatedAtAsc(ReservationStatus.PENDING);
 
         Map<String, ReservationGroupResponse> map = new LinkedHashMap<>();
 
@@ -366,8 +391,12 @@ public class ReservationController {
         }
 
         User admin = userRepository.findById(req.getAdminId()).orElse(null);
-        if (admin == null) return ResponseEntity.badRequest().body("Admin user not found.");
-        if (admin.getRole() != UserRole.ADMIN) return ResponseEntity.status(403).body("User is not ADMIN.");
+        if (admin == null) {
+            return ResponseEntity.badRequest().body("Admin user not found.");
+        }
+        if (admin.getRole() != UserRole.ADMIN) {
+            return ResponseEntity.status(403).body("User is not ADMIN.");
+        }
 
         List<Reservation> groupItems = reservationRepository.findByGroupIdOrderByStartDateTimeAsc(groupId);
         if (groupItems.isEmpty()) {
@@ -417,10 +446,14 @@ public class ReservationController {
                 return ResponseEntity.badRequest().body("Ne moze da se odobri grupa. Konflikti: " + String.join(", ", conflicts));
             }
 
-            for (Reservation r : groupItems) r.setStatus(ReservationStatus.APPROVED);
+            for (Reservation r : groupItems) {
+                r.setStatus(ReservationStatus.APPROVED);
+            }
         } else {
             // reject iz PENDING ili APPROVED (za USER rezervacije)
-            for (Reservation r : groupItems) r.setStatus(ReservationStatus.REJECTED);
+            for (Reservation r : groupItems) {
+                r.setStatus(ReservationStatus.REJECTED);
+            }
         }
 
         reservationRepository.saveAll(groupItems);
@@ -437,6 +470,28 @@ public class ReservationController {
         }
 
         return ResponseEntity.ok(groupItems);
+    }
+
+    @Operation(summary = "Vrati approval history za celu grupu (groupId)")
+    @GetMapping("/group/{groupId}/approvals")
+    public List<ReservationApprovalResponse> groupApprovals(@PathVariable String groupId) {
+        List<ReservationApproval> approvals = approvalRepository
+                .findByReservation_GroupIdOrderByDecidedAtAsc(groupId);
+
+        List<ReservationApprovalResponse> resp = new ArrayList<>();
+        for (ReservationApproval a : approvals) {
+            String fn = a.getDecidedBy() != null ? a.getDecidedBy().getFirstName() : null;
+            String ln = a.getDecidedBy() != null ? a.getDecidedBy().getLastName() : null;
+            resp.add(new ReservationApprovalResponse(
+                    a.getId(),
+                    a.getDecidedAt(),
+                    a.getDecision(),
+                    a.getComment(),
+                    fn,
+                    ln
+            ));
+        }
+        return resp;
     }
 
 }

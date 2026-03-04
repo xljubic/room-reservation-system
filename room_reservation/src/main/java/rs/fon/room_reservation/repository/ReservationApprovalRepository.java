@@ -15,4 +15,5 @@ import rs.fon.room_reservation.model.entity.ReservationApproval;
 public interface ReservationApprovalRepository extends JpaRepository<ReservationApproval, Long> {
 
     List<ReservationApproval> findByReservationIdInOrderByDecidedAtAsc(List<Long> reservationIds);
+    List<ReservationApproval> findByReservation_GroupIdOrderByDecidedAtAsc(String groupId);
 }

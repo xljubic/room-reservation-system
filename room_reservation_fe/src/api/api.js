@@ -16,13 +16,11 @@ export function extractApiErrorMessage(err, fallback = "Greška") {
 }
 
 // ===== AUTH =====
-// POST /api/auth/login  { email, password }
 export async function apiLogin(email, password) {
   const res = await client.post("/auth/login", { email, password });
   return res.data;
 }
 
-// POST /api/auth/change-password  { userId, oldPassword, newPassword }
 export async function apiChangePassword({ userId, oldPassword, newPassword }) {
   const res = await client.post("/auth/change-password", {
     userId,
@@ -33,14 +31,12 @@ export async function apiChangePassword({ userId, oldPassword, newPassword }) {
 }
 
 // ===== ROOMS =====
-// GET /api/rooms
 export async function apiGetRooms() {
   const res = await client.get("/rooms");
   return res.data;
 }
 
 // ===== SCHEDULE =====
-// GET /api/reservations/schedule?date=YYYY-MM-DD
 export async function apiGetSchedule(dateStr) {
   const res = await client.get("/reservations/schedule", {
     params: { date: dateStr },
@@ -49,31 +45,26 @@ export async function apiGetSchedule(dateStr) {
 }
 
 // ===== RESERVATIONS =====
-// GET /api/reservations/my?userId=...
 export async function apiGetMyReservations(userId) {
   const res = await client.get("/reservations/my", { params: { userId } });
   return res.data;
 }
 
-// POST /api/reservations/{id}/cancel   body: { userId }
 export async function apiCancelReservation(reservationId, userId) {
   const res = await client.post(`/reservations/${reservationId}/cancel`, { userId });
   return res.data;
 }
 
-// POST /api/reservations   (CreateReservationGroupRequest)
 export async function apiCreateGroupReservation(payload) {
   const res = await client.post("/reservations", payload);
   return res.data;
 }
 
-// GET /api/reservations/pending-groups
 export async function apiGetPendingGroups() {
   const res = await client.get("/reservations/pending-groups");
   return res.data;
 }
 
-// POST /api/reservations/group/{groupId}/decide
 export async function apiDecideGroup(groupId, { adminId, decision, comment }) {
   const res = await client.post(`/reservations/group/${groupId}/decide`, {
     adminId,
@@ -83,8 +74,23 @@ export async function apiDecideGroup(groupId, { adminId, decision, comment }) {
   return res.data;
 }
 
-// GET /api/reservations/group/{groupId}/approvals
 export async function apiGetGroupApprovals(groupId) {
   const res = await client.get(`/reservations/group/${groupId}/approvals`);
+  return res.data;
+}
+
+// NOVO: decide po jednoj rezervaciji (za APPROVED->REJECT / REJECTED->APPROVE)
+export async function apiDecideReservation(reservationId, { adminId, decision, comment }) {
+  const res = await client.post(`/reservations/${reservationId}/decide`, {
+    adminId,
+    decision,
+    comment: comment ?? "",
+  });
+  return res.data;
+}
+
+// GET /api/reservations/day-groups?date=YYYY-MM-DD
+export async function apiGetDayGroups(dateStr) {
+  const res = await client.get("/reservations/day-groups", { params: { date: dateStr } });
   return res.data;
 }
