@@ -50,7 +50,7 @@ export default function PendingReservationsPage() {
     setLoading(true);
     try {
       const comment = commentByGroupId[groupId] || "";
-      await apiDecideGroup(groupId, user?.id, decisionEnum, comment);
+      await apiDecideGroup(groupId, { adminId: user?.id, decision: decisionEnum, comment });
       await load();
       setCommentByGroupId((p) => ({ ...p, [groupId]: "" }));
     } catch (ex) {
