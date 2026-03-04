@@ -4,13 +4,38 @@ export default function StatusBadge({ status }) {
   const s = String(status || "").toUpperCase();
 
   let bg = "rgba(255,255,255,0.12)";
-  if (s === "APPROVED") bg = "rgba(0,200,0,0.18)";
-  if (s === "PENDING") bg = "rgba(255,165,0,0.18)";
-  if (s === "DENIED" || s === "REJECTED") bg = "rgba(255,0,0,0.18)";
-  if (s === "CANCELED" || s === "CANCELLED") bg = "rgba(180,180,180,0.18)";
+  let border = "rgba(255,255,255,0.18)";
+
+  if (s === "APPROVED") {
+    bg = "rgba(0, 200, 0, 0.20)";
+    border = "rgba(0, 200, 0, 0.40)";
+  }
+  if (s === "PENDING") {
+    bg = "rgba(255, 165, 0, 0.20)";
+    border = "rgba(255, 165, 0, 0.45)";
+  }
+  if (s === "REJECTED" || s === "DENIED") {
+    bg = "rgba(255, 0, 0, 0.18)";
+    border = "rgba(255, 0, 0, 0.40)";
+  }
+  if (s === "CANCELED" || s === "CANCELLED") {
+    bg = "rgba(180,180,180,0.18)";
+    border = "rgba(180,180,180,0.35)";
+  }
 
   return (
-    <span style={{ padding: "2px 8px", borderRadius: 999, background: bg, fontSize: 12 }}>
+    <span
+      style={{
+        display: "inline-block",
+        padding: "6px 10px",
+        borderRadius: 999,
+        fontWeight: 800,
+        fontSize: 12,
+        letterSpacing: 0.6,
+        background: bg,
+        border: `1px solid ${border}`,
+      }}
+    >
       {s}
     </span>
   );

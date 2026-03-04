@@ -53,7 +53,8 @@ export default function LoginPage() {
         </button>
 
         <div style={{ opacity: 0.8, fontSize: 13 }}>
-          (Za seed) admin@fon.rs / admin123, marko@fon.rs / marko123, jelena@fon.rs / jelena123
+          (Za laksi login) savic.dusan@fon.bg.ac.rs / dusan, ilija.antovic@fon.bg.ac.rs / ilija, lazarevic.sasa@fon.bg.ac.rs / sasa,
+                           tatjana.stojanovic@fon.bg.ac.rs / tatjana, milos.milic@fon.bg.ac.rs / milos
         </div>
       </form>
     </div>

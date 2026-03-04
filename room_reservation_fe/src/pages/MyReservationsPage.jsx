@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
+
 import { useAuth } from "../auth/AuthContext.jsx";
 import { apiCancelReservation, apiGetMyReservations, apiGetGroupApprovals } from "../api/api.js";
 import { extractErrorMessage } from "../utils/errors.js";
 import { formatDateDDMMYYYY, formatTimeHHMM } from "../utils/time.js";
+import StatusBadge from "../components/StatusBadge.jsx";
 
 function normStatus(s) {
   return String(s || "").toUpperCase();
@@ -65,16 +67,24 @@ function dedupeApprovals(list) {
   });
 }
 
+function groupStatus(reservations) {
+  const s = (reservations || []).map((r) => normStatus(r.status));
+  if (s.includes("PENDING")) return "PENDING";
+  if (s.includes("REJECTED")) return "REJECTED";
+  if (s.every((x) => x === "CANCELED" || x === "CANCELLED")) return "CANCELED";
+  if (s.includes("APPROVED")) return "APPROVED";
+  return s[0] || "";
+}
+
 // ISTA ŠIRINA kao Create/Pending (jedno mesto, ne diraj više)
 const PAGE_WRAP_STYLE = {
   width: "min(1100px, 100%)",
   margin: "0 auto",
-  padding: "20px 16px",
+  padding: "20px 0", // padding levo/desno već daje App.jsx
 };
 
 export default function MyReservationsPage() {
   const { user } = useAuth();
-
   const [reservations, setReservations] = useState([]);
   const [approvalsByGroupId, setApprovalsByGroupId] = useState({}); // { [groupId]: Approval[] }
   const [filter, setFilter] = useState("ALL");
@@ -132,12 +142,14 @@ export default function MyReservationsPage() {
     if (filter !== "ALL") {
       list = list.filter((g) => g.reservations.some((it) => normStatus(it.status) === filter));
     }
+
     // najnovije prvo (po createdAt max u grupi)
     list.sort((a, b) => {
       const ca = Math.max(...a.reservations.map((x) => Date.parse(x.createdAt || x.startDateTime || 0)));
       const cb = Math.max(...b.reservations.map((x) => Date.parse(x.createdAt || x.startDateTime || 0)));
       return cb - ca;
     });
+
     return list;
   }, [grouped, filter]);
 
@@ -204,6 +216,8 @@ export default function MyReservationsPage() {
           const approvalsRaw = approvalsByGroupId[g.groupId] || [];
           const approvals = dedupeApprovals(approvalsRaw);
 
+          const status = groupStatus(g.reservations);
+
           return (
             <div
               key={g.groupId}
@@ -219,13 +233,17 @@ export default function MyReservationsPage() {
                   {first?.name} — {dateLabel} {fromLabel}–{toLabel} {first?.purpose ? `(${first.purpose})` : null}
                 </div>
 
-                <button
-                  onClick={() => cancelGroup(g)}
-                  disabled={loading || !canCancel}
-                  style={{ padding: "10px 14px", borderRadius: 10 }}
-                >
-                  Otkaži
-                </button>
+                {/* ✅ vraćen badge gore desno */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <StatusBadge status={status} />
+                  <button
+                    onClick={() => cancelGroup(g)}
+                    disabled={loading || !canCancel}
+                    style={{ padding: "10px 14px", borderRadius: 10 }}
+                  >
+                    Otkaži
+                  </button>
+                </div>
               </div>
 
               <div style={{ marginTop: 10 }}>
@@ -243,7 +261,7 @@ export default function MyReservationsPage() {
                   {approvals.map((a) => (
                     <div key={`${a.id}-${a.decidedAt}`} style={{ marginTop: 6 }}>
                       • {fmtDateTime(a.decidedAt)} {String(a.decision || "").toUpperCase()} by Admin {adminFullName(a)}
-                      <div style={{ marginLeft: 14 }}>• Komentar: {a.comment ? a.comment : "—"}</div>
+                      {"  "}• Komentar: {a.comment ? a.comment : "—"}
                     </div>
                   ))}
                 </div>

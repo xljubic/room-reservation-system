@@ -12,6 +12,7 @@ import { toDateInputValue, formatDateDDMMYYYY, formatTimeHHMM } from "../utils/t
 import { extractErrorMessage } from "../utils/errors.js";
 import ScheduleGrid from "../components/ScheduleGrid.jsx";
 import { normalizeSchedule } from "../utils/schedule.js";
+import StatusBadge from "../components/StatusBadge.jsx";
 
 function fmtDateTime(dt) {
   const d = formatDateDDMMYYYY(dt);
@@ -210,9 +211,12 @@ export default function HomePage() {
                     <div style={{ fontWeight: 800 }}>
                       {name} {purpose ? `(${purpose})` : ""}{" "}
                       {createdByEmail ? <span style={{ fontWeight: 500 }}>by {createdByEmail}</span> : null}
-                      <div style={{ marginTop: 4, fontWeight: 600, opacity: 0.9 }}>
-                        {dateLabel} {fromLabel}–{toLabel} • STATUS: {status}
-                      </div>
+                    <div style={{ marginTop: 4, fontWeight: 600, opacity: 0.9, display: "flex", gap: 10, alignItems: "center" }}>
+                      <span>
+                        {dateLabel} {fromLabel}–{toLabel}
+                      </span>
+                      <StatusBadge status={status} />
+                    </div>
                     </div>
                   </div>
 
@@ -229,10 +233,10 @@ export default function HomePage() {
                   {approvals.length > 0 ? (
                     <div style={{ marginTop: 10, fontSize: 12, opacity: 0.85 }}>
                       {approvals.map((a) => (
-                        <div key={`${a.id}-${a.decidedAt}`} style={{ marginTop: 6 }}>
-                          • {fmtDateTime(a.decidedAt)} {String(a.decision || "").toUpperCase()} by Admin {adminFullName(a)}
-                          <div style={{ marginLeft: 14 }}>• Komentar: {a.comment ? a.comment : "—"}</div>
-                        </div>
+                      <div key={`${a.id}-${a.decidedAt}`} style={{ marginTop: 6 }}>
+                        • {fmtDateTime(a.decidedAt)} {String(a.decision || "").toUpperCase()} by Admin {adminFullName(a)}
+                        {"  "}• Komentar: {a.comment ? a.comment : "—"}
+                      </div>
                       ))}
                     </div>
                   ) : null}
