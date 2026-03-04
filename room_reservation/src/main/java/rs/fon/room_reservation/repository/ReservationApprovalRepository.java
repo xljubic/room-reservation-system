@@ -4,6 +4,7 @@
  */
 package rs.fon.room_reservation.repository;
 
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import rs.fon.room_reservation.model.entity.ReservationApproval;
 
@@ -11,6 +12,7 @@ import rs.fon.room_reservation.model.entity.ReservationApproval;
  *
  * @author Aleksandar
  */
-public interface ReservationApprovalRepository extends JpaRepository<ReservationApproval, Long>{
-    
+public interface ReservationApprovalRepository extends JpaRepository<ReservationApproval, Long> {
+
+    List<ReservationApproval> findByReservationIdInOrderByDecidedAtAsc(List<Long> reservationIds);
 }

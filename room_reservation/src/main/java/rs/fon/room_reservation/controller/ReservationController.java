@@ -28,6 +28,7 @@ import rs.fon.room_reservation.dto.CreateReservationGroupItemRequest;
 import rs.fon.room_reservation.dto.CreateReservationGroupRequest;
 import rs.fon.room_reservation.dto.CreateReservationRequest;
 import rs.fon.room_reservation.dto.DecideReservationRequest;
+import rs.fon.room_reservation.dto.ReservationApprovalResponse;
 import rs.fon.room_reservation.dto.ReservationGroupItemResponse;
 import rs.fon.room_reservation.dto.ReservationGroupResponse;
 import rs.fon.room_reservation.dto.ScheduleResponse;
@@ -346,6 +347,30 @@ public class ReservationController {
         }
 
         return new ArrayList<>(map.values());
+    }
+
+    @Operation(summary = "Vrati approval history za grupu (groupId) - sortirano od prvog do poslednjeg")
+    @GetMapping("/group/{groupId}/approvals")
+    public List<ReservationApprovalResponse> groupApprovals(@PathVariable String groupId) {
+        List<Reservation> groupItems = reservationRepository.findByGroupIdOrderByStartDateTimeAsc(groupId);
+        if (groupItems == null || groupItems.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> ids = groupItems.stream().map(Reservation::getId).toList();
+        var approvals = approvalRepository.findByReservationIdInOrderByDecidedAtAsc(ids);
+
+        // Mapiramo u DTO da ne vraćamo cele entitete (User ima passwordHash polje)
+        return approvals.stream()
+                .map(a -> new ReservationApprovalResponse(
+                a.getId(),
+                a.getDecidedAt(),
+                a.getDecision(),
+                a.getComment(),
+                a.getDecidedBy() != null ? a.getDecidedBy().getFirstName() : null,
+                a.getDecidedBy() != null ? a.getDecidedBy().getLastName() : null
+        ))
+                .toList();
     }
 
     @Operation(summary = "Admin: approve/reject CELE GRUPE (groupId) + history")

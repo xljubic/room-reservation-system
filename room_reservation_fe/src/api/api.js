@@ -82,3 +82,9 @@ export async function apiDecideGroup(groupId, { adminId, decision, comment }) {
   });
   return res.data;
 }
+
+// GET /api/reservations/group/{groupId}/approvals
+export async function apiGetGroupApprovals(groupId) {
+  const res = await client.get(`/reservations/group/${groupId}/approvals`);
+  return res.data;
+}
