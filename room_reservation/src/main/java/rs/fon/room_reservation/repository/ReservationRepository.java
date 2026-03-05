@@ -70,7 +70,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByStatusAndGroupIdIsNotNullOrderByCreatedAtAsc(ReservationStatus status);
 
-    // ✅ NOVO: admin lista za datum sa APPROVED/PENDING/REJECTED (grupisano na kontroleru)
+    //  NOVO: admin lista za datum sa APPROVED/PENDING/REJECTED (grupisano na kontroleru)
     List<Reservation> findByGroupIdIsNotNullAndStartDateTimeGreaterThanEqualAndStartDateTimeLessThanAndStatusInOrderByStartDateTimeAsc(
             LocalDateTime from,
             LocalDateTime to,
