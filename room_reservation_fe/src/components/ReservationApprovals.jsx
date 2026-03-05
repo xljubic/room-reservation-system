@@ -32,7 +32,7 @@ export default function ReservationApprovals({ approvals }) {
   const boxStyle = {
     marginTop: 10,
     paddingTop: 10,
-    borderTop: "1px solid rgba(255,255,255,0.08)",
+    borderTop: "1px solid var(--border-dark)",
     fontSize: 13,
     opacity: 0.9,
     textAlign: "left",

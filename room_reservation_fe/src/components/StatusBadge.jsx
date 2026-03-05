@@ -1,10 +1,10 @@
 import React from "react";
 
-export default function StatusBadge({ status }) {
+export default function StatusBadge({ status, className }) {
   const s = String(status || "").toUpperCase();
 
-  let bg = "rgba(255,255,255,0.12)";
-  let border = "rgba(255,255,255,0.18)";
+  let bg = "var(--bg-input)";
+  let border = "var(--border-light)";
 
   if (s === "APPROVED") {
     bg = "rgba(0, 200, 0, 0.20)";
@@ -25,6 +25,7 @@ export default function StatusBadge({ status }) {
 
   return (
     <span
+      className={className}
       style={{
         display: "inline-block",
         padding: "6px 10px",

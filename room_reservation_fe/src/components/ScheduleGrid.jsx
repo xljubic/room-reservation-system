@@ -109,7 +109,8 @@ export default function ScheduleGrid({
       {/* Grid wrapper: horizontal + vertical scroll */}
       <div
         style={{
-          border: "1px solid rgba(255,255,255,0.08)",
+          border: "1px solid var(--border-medium)",
+          background: "var(--bg-card)",
           borderRadius: 12,
           overflow: "hidden",
         }}
@@ -134,10 +135,10 @@ export default function ScheduleGrid({
                   style={{
                     textAlign: "left",
                     padding: 10,
-                    borderBottom: "1px solid rgba(255,255,255,0.08)",
+                    borderBottom: "1px solid var(--border-dark)",
                     position: "sticky",
                     top: 0,
-                    background: "rgba(20,20,20,0.95)",
+                    background: "var(--bg-secondary)",
                     zIndex: 3,
                     minWidth: 220,
                   }}
@@ -150,12 +151,12 @@ export default function ScheduleGrid({
                     key={s}
                     style={{
                       padding: "10px 8px",
-                      borderBottom: "1px solid rgba(255,255,255,0.08)",
+                      borderBottom: "1px solid var(--border-dark)",
                       fontWeight: 600,
                       whiteSpace: "nowrap",
                       position: "sticky",
                       top: 0,
-                      background: "rgba(20,20,20,0.95)",
+                      background: "var(--bg-secondary)",
                       zIndex: 2,
                     }}
                   >
@@ -177,13 +178,13 @@ export default function ScheduleGrid({
                       onClick={() => setRoomPopup(r)}
                       style={{
                         padding: 10,
-                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        borderBottom: "1px solid var(--border-dark)",
                         fontWeight: 700,
                         cursor: "pointer",
                         userSelect: "none",
                         position: "sticky",
                         left: 0,
-                        background: "rgba(20,20,20,0.95)",
+                        background: "var(--bg-secondary)",
                         zIndex: 1,
                       }}
                       title="Klikni za detalje o sali"
@@ -218,8 +219,8 @@ export default function ScheduleGrid({
                           key={`${r.id}__${slot}`}
                           style={{
                             height: 24,
-                            borderBottom: "1px solid rgba(255,255,255,0.06)",
-                            borderLeft: "1px solid rgba(255,255,255,0.06)",
+                            borderBottom: "1px solid var(--border-dark)",
+                            borderLeft: "1px solid var(--border-dark)",
                             ...style,
                           }}
                           title={st ? `${st}` : ""}
@@ -254,8 +255,8 @@ export default function ScheduleGrid({
             style={{
               width: "min(520px, calc(100% - 24px))",
               borderRadius: 14,
-              border: "1px solid rgba(255,255,255,0.10)",
-              background: "rgba(25,25,25,0.98)",
+              border: "1px solid var(--border-medium)",
+              background: "var(--bg-card)",
               boxShadow: "0 12px 40px rgba(0,0,0,0.55)",
               padding: 16,
             }}

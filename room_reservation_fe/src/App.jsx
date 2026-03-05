@@ -12,24 +12,28 @@ import Navbar from "./components/Navbar.jsx";
 
 function ProtectedLayout() {
   const { user } = useAuth();
-
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#1f1f1f" }}>
-      <Navbar />
-
-      {/* ✅ JEDNA širina za sve stranice (kao Create/Pending) */}
-      <div style={{ width: "min(1100px, 100%)", margin: "0 auto", padding: "0 16px" }}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/create" element={<CreateReservationPage />} />
-          <Route path="/mine" element={<MyReservationsPage />} />
-          <Route path="/pending" element={<PendingReservationsPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+    <div className="app-shell">
+      <div className="navbar">
+        <Navbar />
       </div>
+
+      <main className="app-main">
+        <div className="container">
+          <div className="page">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/create" element={<CreateReservationPage />} />
+              <Route path="/mine" element={<MyReservationsPage />} />
+              <Route path="/pending" element={<PendingReservationsPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

@@ -6,8 +6,8 @@ const linkStyle = ({ isActive }) => ({
   padding: "8px 12px",
   borderRadius: "8px",
   textDecoration: "none",
-  color: "white",
-  background: isActive ? "rgba(255,255,255,0.12)" : "transparent",
+  color: "var(--text-primary)",
+  background: isActive ? "var(--bg-card)" : "transparent",
 });
 
 export default function Navbar() {
@@ -27,9 +27,9 @@ export default function Navbar() {
         justifyContent: "space-between",
         gap: 12,
         padding: "12px 16px",
-        background: "#000",
-        borderBottom: "1px solid rgba(255,255,255,0.12)",
-        color: "white",
+        background: "var(--bg-secondary)",
+        borderBottom: "1px solid var(--border-medium)",
+        color: "var(--text-primary)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -64,9 +64,9 @@ export default function Navbar() {
           style={{
             padding: "8px 12px",
             borderRadius: "10px",
-            border: "1px solid rgba(255,255,255,0.18)",
-            background: "rgba(255,255,255,0.08)",
-            color: "white",
+            border: "1px solid var(--border-light)",
+            background: "var(--bg-card)",
+            color: "var(--text-primary)",
             cursor: "pointer",
           }}
         >
@@ -78,9 +78,9 @@ export default function Navbar() {
           style={{
             padding: "8px 12px",
             borderRadius: "10px",
-            border: "1px solid rgba(255,255,255,0.18)",
-            background: "rgba(255,255,255,0.08)",
-            color: "white",
+            border: "1px solid var(--border-light)",
+            background: "var(--bg-card)",
+            color: "var(--text-primary)",
             cursor: "pointer",
           }}
         >

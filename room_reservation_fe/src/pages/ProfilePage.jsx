@@ -3,12 +3,12 @@ import { useAuth } from "../auth/AuthContext.jsx";
 import { apiChangePassword, extractApiErrorMessage } from "../api/api.js";
 
 const COLORS = {
-  page: "#121212",        // normal dark mode
-  card: "#1e1e1e",
-  border: "rgba(255,255,255,0.10)",
-  text: "#eaeaea",
-  muted: "rgba(255,255,255,0.70)",
-  inputBg: "#2a2a2a",
+  page: "var(--bg-primary)",        // Main background
+  card: "var(--bg-card)",           // Card background
+  border: "var(--border-medium)",   // Border color
+  text: "var(--text-primary)",      // Primary text
+  muted: "var(--text-secondary)",   // Secondary text
+  inputBg: "var(--bg-input)",       // Input background
 };
 
 function Modal({ open, title, children, onClose }) {
@@ -22,7 +22,7 @@ function Modal({ open, title, children, onClose }) {
         inset: 0,
         background: "rgba(0,0,0,0.55)",
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         justifyContent: "center",
         zIndex: 999,
         padding: 16,
@@ -32,7 +32,6 @@ function Modal({ open, title, children, onClose }) {
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "min(720px, 100%)",
-          marginTop: 24,
           background: COLORS.card,
           border: `1px solid ${COLORS.border}`,
           borderRadius: 14,
@@ -49,7 +48,7 @@ function Modal({ open, title, children, onClose }) {
               padding: "6px 10px",
               borderRadius: 10,
               border: `1px solid ${COLORS.border}`,
-              background: "rgba(255,255,255,0.08)",
+              background: "var(--bg-input)",
               color: COLORS.text,
               cursor: "pointer",
             }}
@@ -119,8 +118,8 @@ export default function ProfilePage() {
   const valueStyle = { color: COLORS.text, fontWeight: 700 };
 
   return (
-    <div style={{ maxWidth: 900, margin: "24px auto", padding: 16, color: COLORS.text }}>
-      <h1 style={{ marginTop: 0, fontSize: 56, lineHeight: 1.05 }}>Moj profil</h1>
+    <div style={{ color: COLORS.text }} className="page-content-wrap">
+      <h1 style={{ margin: "0 0 24px 0", fontSize: 56, lineHeight: 1.05 }}>Moj profil</h1>
 
       <div
         style={{
@@ -145,14 +144,14 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div style={{ marginTop: 18 }}>
+        <div style={{ marginTop: 24 }}>
           <button
             onClick={() => setOpen(true)}
             style={{
               padding: "10px 14px",
               borderRadius: 10,
               border: `1px solid ${COLORS.border}`,
-              background: "rgba(255,255,255,0.08)",
+              background: "var(--bg-input)",
               color: COLORS.text,
               cursor: "pointer",
               fontWeight: 800,
@@ -164,7 +163,7 @@ export default function ProfilePage() {
       </div>
 
       <Modal open={open} title="Promena šifre" onClose={close}>
-        <div style={{ display: "grid", gap: 10 }}>
+        <div style={{ display: "grid", gap: 12 }}>
           <div style={{ display: "grid", gap: 6 }}>
             <label>Stara šifra</label>
             <input
@@ -219,7 +218,7 @@ export default function ProfilePage() {
           {err ? <div style={{ color: "#ff6b6b" }}>{err}</div> : null}
           {ok ? <div style={{ color: "#7CFF7C" }}>{ok}</div> : null}
 
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 6 }}>
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 }}>
             <button
               onClick={close}
               disabled={loading}
@@ -227,7 +226,7 @@ export default function ProfilePage() {
                 padding: "10px 12px",
                 borderRadius: 10,
                 border: `1px solid ${COLORS.border}`,
-                background: "rgba(255,255,255,0.08)",
+                background: "var(--bg-input)",
                 color: COLORS.text,
                 cursor: "pointer",
               }}

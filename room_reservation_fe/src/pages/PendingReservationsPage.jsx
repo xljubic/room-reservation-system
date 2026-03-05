@@ -61,16 +61,16 @@ export default function PendingReservationsPage() {
   };
 
   return (
-    <div style={{ padding: 24 }}>
-      <h2>Pending rezervacije</h2>
+    <div className="page-content-wrap">
+      <h2 className="page-title">Pending rezervacije</h2>
 
-      <button onClick={load} disabled={loading} style={{ padding: "10px 14px", borderRadius: 10 }}>
+      <button onClick={load} disabled={loading} className="btn">
         Osveži
       </button>
 
-      {err && <div style={{ color: "#ff6b6b", marginTop: 10 }}>{err}</div>}
+      {err && <div style={{ color: "#ff6b6b", marginTop: 16 }}>{err}</div>}
 
-      <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
+      <div style={{ marginTop: 16, display: "grid", gap: 16 }}>
         {sorted.length === 0 ? (
           <div>Nema pending rezervacija.</div>
         ) : (
@@ -88,7 +88,8 @@ export default function PendingReservationsPage() {
               <div
                 key={groupId}
                 style={{
-                  border: "1px solid rgba(255,255,255,0.10)",
+                  border: "1px solid var(--border-medium)",
+                  background: "var(--bg-card)",
                   borderRadius: 12,
                   padding: 12,
                 }}
@@ -128,22 +129,23 @@ export default function PendingReservationsPage() {
                     value={commentByGroupId[groupId] || ""}
                     onChange={(e) => setCommentByGroupId((p) => ({ ...p, [groupId]: e.target.value }))}
                     placeholder="Upiši komentar..."
+                    className="input"
                     style={{ width: "100%" }}
                   />
                 </div>
 
-                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 12 }}>
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 }}>
                   <button
                     onClick={() => decide(groupId, "APPROVED")}
                     disabled={loading}
-                    style={{ padding: "8px 12px", borderRadius: 10 }}
+                    className="btn"
                   >
                     Approve
                   </button>
                   <button
                     onClick={() => decide(groupId, "REJECTED")}
                     disabled={loading}
-                    style={{ padding: "8px 12px", borderRadius: 10 }}
+                    className="btn"
                   >
                     Reject
                   </button>

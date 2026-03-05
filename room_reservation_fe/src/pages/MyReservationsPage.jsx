@@ -76,12 +76,7 @@ function groupStatus(reservations) {
   return s[0] || "";
 }
 
-// ISTA ŠIRINA kao Create/Pending (jedno mesto, ne diraj više)
-const PAGE_WRAP_STYLE = {
-  width: "min(1100px, 100%)",
-  margin: "0 auto",
-  padding: "20px 0", // padding levo/desno već daje App.jsx
-};
+
 
 export default function MyReservationsPage() {
   const { user } = useAuth();
@@ -170,11 +165,11 @@ export default function MyReservationsPage() {
   };
 
   return (
-    <div style={PAGE_WRAP_STYLE}>
-      <h2>Moje rezervacije</h2>
+    <div className="page-content-wrap">
+      <h2 className="page-title">Moje rezervacije</h2>
 
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginBottom: 12 }}>
-        <button onClick={load} disabled={loading} style={{ padding: "10px 14px", borderRadius: 10 }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
+        <button onClick={load} disabled={loading} className="btn">
           Osveži
         </button>
 
@@ -183,7 +178,7 @@ export default function MyReservationsPage() {
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            style={{ padding: "10px 12px", borderRadius: 10 }}
+            className="input"
           >
             <option value="ALL">Sve</option>
             <option value="PENDING">PENDING</option>
@@ -195,7 +190,7 @@ export default function MyReservationsPage() {
       </div>
 
       {err ? (
-        <div style={{ marginBottom: 12, padding: 10, borderRadius: 12, border: "1px solid rgba(255,0,0,0.35)" }}>
+        <div style={{ marginTop: 16, padding: 10, borderRadius: 12, border: "1px solid rgba(255,0,0,0.35)" }}>
           {err}
         </div>
       ) : null}
@@ -222,7 +217,8 @@ export default function MyReservationsPage() {
             <div
               key={g.groupId}
               style={{
-                border: "1px solid rgba(255,255,255,0.12)",
+                border: "1px solid var(--border-medium)",
+                background: "var(--bg-card)",
                 borderRadius: 14,
                 padding: 14,
                 marginBottom: 12,
@@ -239,7 +235,7 @@ export default function MyReservationsPage() {
                   <button
                     onClick={() => cancelGroup(g)}
                     disabled={loading || !canCancel}
-                    style={{ padding: "10px 14px", borderRadius: 10 }}
+                    className="btn"
                   >
                     Otkaži
                   </button>
@@ -248,7 +244,7 @@ export default function MyReservationsPage() {
 
               <div style={{ marginTop: 10 }}>
                 {g.reservations.map((it) => (
-                  <div key={it.id} style={{ padding: "6px 0", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div key={it.id} style={{ padding: "6px 0", borderTop: "1px solid var(--border-dark)" }}>
                     {it.room?.code || it.roomCode} — {formatTimeHHMM(it.startDateTime)}–{formatTimeHHMM(it.endDateTime)}
                     {it.description ? ` | Opis: ${it.description}` : ""}
                   </div>

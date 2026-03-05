@@ -147,28 +147,19 @@ export default function CreateReservationPage() {
   // širina polja za Naziv/Svrha (manje nego full width)
   const formWidth = "min(520px, 100%)";
 
-  // uskladi input/button look sa ostalim stranicama
-  const controlBtnStyle = {
-    padding: "10px 14px",
-    borderRadius: 10,
-    cursor: "pointer",
-  };
-  const controlInputStyle = { padding: "8px 10px", borderRadius: 10 };
-  const formInputStyle = { width: "100%", boxSizing: "border-box" };
-
   return (
-    <div style={{ padding: 24, display: "grid", gap: 14 }}>
-      <h2 style={{ margin: 0 }}>Napravi rezervaciju</h2>
+    <div className="page-content-wrap">
+      <h2 className="page-title">Napravi rezervaciju</h2>
 
       {/* Gornje kontrole */}
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 16 }}>
         <div>
           Datum:{" "}
           <input
             value={dateStr}
             onChange={(e) => setDateStr(e.target.value)}
             type="date"
-            style={controlInputStyle}
+            className="input"
           />
         </div>
 
@@ -181,7 +172,7 @@ export default function CreateReservationPage() {
             min="08:00"
             max="20:00"
             step="900"
-            style={controlInputStyle}
+            className="input"
           />
         </div>
 
@@ -194,11 +185,11 @@ export default function CreateReservationPage() {
             min="08:00"
             max="20:00"
             step="900"
-            style={controlInputStyle}
+            className="input"
           />
         </div>
 
-        <button onClick={loadBase} style={controlBtnStyle} disabled={loading}>
+        <button onClick={loadBase} className="btn" disabled={loading}>
           Osveži
         </button>
       </div>
@@ -211,7 +202,7 @@ export default function CreateReservationPage() {
       <div
         style={{
           borderRadius: 12,
-          border: "1px solid rgba(255,255,255,0.10)",
+          border: "1px solid var(--border-medium)",
           overflowX: "auto",
           maxWidth: "100%",
         }}
@@ -223,8 +214,8 @@ export default function CreateReservationPage() {
         />
       </div>
 
-      <div style={{ display: "grid", gap: 12, marginTop: 6 }}>
-        <h3 style={{ margin: 0 }}>Kreiranje rezervacije (grupa)</h3>
+      <div style={{ display: "grid", gap: 12, marginTop: 24 }}>
+        <h3 style={{ margin: "0 0 8px 0" }}>Kreiranje rezervacije (grupa)</h3>
 
         {/* Naziv */}
         <div style={{ width: formWidth, display: "grid", gap: 6 }}>
@@ -232,7 +223,8 @@ export default function CreateReservationPage() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            style={{ ...controlInputStyle, ...formInputStyle }}
+            className="input"
+            style={{ width: "100%", boxSizing: "border-box" }}
             placeholder="npr. Termin"
           />
         </div>
@@ -243,7 +235,8 @@ export default function CreateReservationPage() {
           <select
             value={purpose}
             onChange={(e) => setPurpose(e.target.value)}
-            style={{ ...controlInputStyle, ...formInputStyle }}
+            className="input"
+            style={{ width: "100%", boxSizing: "border-box" }}
           >
             <option value="VEZBE">VEZBE</option>
             <option value="ISPIT">ISPIT</option>
@@ -270,12 +263,13 @@ export default function CreateReservationPage() {
                 style={{
                   maxHeight: 260,
                   overflowY: "auto",
-                  border: "1px solid rgba(255,255,255,0.10)",
+                  border: "1px solid var(--border-medium)",
                   borderRadius: 12,
                   padding: 10,
                   width: "100%",
                   maxWidth: "100%",
                   boxSizing: "border-box",
+                  background: "var(--bg-card)",
                 }}
               >
                 <div style={{ display: "grid", gap: 10 }}>
@@ -289,7 +283,8 @@ export default function CreateReservationPage() {
                           gap: 6,
                           padding: 10,
                           borderRadius: 12,
-                          border: "1px solid rgba(255,255,255,0.08)",
+                          border: "1px solid var(--border-light)",
+                          background: "var(--bg-input)",
                         }}
                       >
                         <label style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -310,7 +305,8 @@ export default function CreateReservationPage() {
                             onChange={(e) =>
                               setDescByRoomId((p) => ({ ...p, [r.id]: e.target.value }))
                             }
-                            style={{ ...controlInputStyle, ...formInputStyle }}
+                            className="input"
+                            style={{ width: "100%", boxSizing: "border-box" }}
                             placeholder="npr. grupa 1"
                           />
                         </div>
@@ -331,7 +327,8 @@ export default function CreateReservationPage() {
         <button
           onClick={onSubmit}
           disabled={loading}
-          style={{ ...controlBtnStyle, width: "fit-content", minWidth: 220 }}
+          className="btn"
+          style={{ width: "fit-content", minWidth: 220 }}
         >
           {loading ? "..." : "Kreiraj rezervaciju"}
         </button>

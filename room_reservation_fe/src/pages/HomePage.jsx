@@ -48,11 +48,7 @@ function dedupeApprovals(list) {
   });
 }
 
-const PAGE_WRAP_STYLE = {
-  width: "min(1100px, 100%)",
-  margin: "0 auto",
-  padding: "20px 16px",
-};
+
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -136,40 +132,40 @@ export default function HomePage() {
     }
   };
 
-  // GRID NE MENJAMO: on blokira samo APPROVED+PENDING (ScheduleGrid radi to preko scheduleRaw)
   return (
-    <div style={PAGE_WRAP_STYLE}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <h2 style={{ margin: 0 }}>Početna</h2>
-        <button onClick={() => navigate("/create")} style={{ padding: "10px 14px", borderRadius: 10 }}>
-          Napravi rezervaciju
-        </button>
-      </div>
+    <div className="page-content-wrap">
+      <h2 className="page-title">Početna</h2>
 
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginTop: 12 }}>
-        <div>
-          <div style={{ fontWeight: 700, marginBottom: 4 }}>Datum:</div>
-          <input value={dateStr} onChange={(e) => setDateStr(e.target.value)} type="date" />
+      <div style={{ display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
+        <div className="label-col">
+          <label style={{ fontWeight: 700 }}>Datum:</label>
+          <input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} className="input" />
         </div>
 
-        <button onClick={load} disabled={loading} style={{ padding: "10px 14px", borderRadius: 10 }}>
+        <button onClick={load} disabled={loading} className="btn">
           Osveži
         </button>
       </div>
 
       {err ? (
-        <div style={{ marginTop: 12, padding: 10, borderRadius: 12, border: "1px solid rgba(255,0,0,0.35)" }}>
+        <div style={{ marginTop: 16, padding: 10, borderRadius: 12, border: "1px solid rgba(255,0,0,0.35)" }}>
           {err}
         </div>
       ) : null}
 
-      <div style={{ marginTop: 14 }}>
+      <div style={{ marginTop: 24 }}>
         <ScheduleGrid rooms={rooms} scheduleRaw={scheduleRaw} highlightSelection={null} />
       </div>
 
+      <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-start" }}>
+        <button onClick={() => navigate("/create")} className="btn">
+          Napravi rezervaciju
+        </button>
+      </div>
+
       {user?.role === "ADMIN" ? (
-        <div style={{ marginTop: 18 }}>
-          <h3 style={{ marginBottom: 10 }}>Sve rezervacije za izabrani datum</h3>
+        <div style={{ marginTop: 32 }}>
+          <h3 style={{ margin: "0 0 16px 0" }}>Sve rezervacije za izabrani datum</h3>
 
           {dayGroups.length === 0 ? (
             <div>Nema rezervacija za ovaj datum.</div>
@@ -201,12 +197,16 @@ export default function HomePage() {
                 <div
                   key={groupId}
                   style={{
-                    border: "1px solid rgba(255,255,255,0.12)",
+                    border: "1px solid var(--border-medium)",
+                    background: "var(--bg-card)",
                     borderRadius: 14,
                     padding: 14,
                     marginBottom: 12,
+                    position: "relative",
                   }}
                 >
+                  <StatusBadge status={status} className="badge-top-right" />
+
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                     <div style={{ fontWeight: 800 }}>
                       {name} {purpose ? `(${purpose})` : ""}{" "}
@@ -215,14 +215,13 @@ export default function HomePage() {
                       <span>
                         {dateLabel} {fromLabel}–{toLabel}
                       </span>
-                      <StatusBadge status={status} />
                     </div>
                     </div>
                   </div>
 
                   <div style={{ marginTop: 10 }}>
                     {items.map((it) => (
-                      <div key={it.id} style={{ padding: "6px 0", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                      <div key={it.id} style={{ padding: "6px 0", borderTop: "1px solid var(--border-dark)" }}>
                         {it.roomCode} — {formatTimeHHMM(it.startDateTime)}–{formatTimeHHMM(it.endDateTime)}
                         {it.description ? ` | Opis: ${it.description}` : ""}
                       </div>
@@ -250,7 +249,8 @@ export default function HomePage() {
                           value={commentByGroupId[groupId] || ""}
                           onChange={(e) => setCommentByGroupId((p) => ({ ...p, [groupId]: e.target.value }))}
                           placeholder="Upiši komentar..."
-                          style={{ width: "100%", padding: 10, borderRadius: 10 }}
+                          className="input"
+                          style={{ width: "100%" }}
                         />
 
                         <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
@@ -259,14 +259,14 @@ export default function HomePage() {
                               <button
                                 onClick={() => decide(groupId, "APPROVED")}
                                 disabled={loading}
-                                style={{ padding: "10px 14px", borderRadius: 10 }}
+                                className="btn"
                               >
                                 Approve
                               </button>
                               <button
                                 onClick={() => decide(groupId, "REJECTED")}
                                 disabled={loading}
-                                style={{ padding: "10px 14px", borderRadius: 10 }}
+                                className="btn"
                               >
                                 Reject
                               </button>
@@ -277,7 +277,7 @@ export default function HomePage() {
                             <button
                               onClick={() => decide(groupId, "REJECTED")}
                               disabled={loading}
-                              style={{ padding: "10px 14px", borderRadius: 10 }}
+                              className="btn"
                             >
                               Reject
                             </button>
@@ -287,7 +287,7 @@ export default function HomePage() {
                             <button
                               onClick={() => decide(groupId, "APPROVED")}
                               disabled={loading}
-                              style={{ padding: "10px 14px", borderRadius: 10 }}
+                              className="btn"
                             >
                               Approve
                             </button>
